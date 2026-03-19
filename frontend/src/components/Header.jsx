@@ -124,10 +124,10 @@ export default function Header() {
       <div className="bg-[var(--primary)] text-white px-4 py-2 flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0 shadow-sm">
         <div className="flex flex-col sm:flex-row gap-1 sm:gap-6 items-center sm:items-start text-sm">
           <span className="flex items-center gap-1">
-            <Phone size={16} /> +1 800 123 4567
+            <Phone size={16} /> 9789345333, 8903037883
           </span>
           <span className="flex items-center gap-1">
-            <Mail size={16} /> bnc@gmail.com
+            <Mail size={16} /> bncbalajicbe@gmail.com
           </span>
         </div>
         <div className="flex gap-4 mt-2 sm:mt-0">
@@ -143,10 +143,16 @@ export default function Header() {
             size={18}
             className="cursor-pointer hover:text-gray-200 transition-colors"
           />
-          <FaWhatsapp
-            size={18}
-            className="cursor-pointer hover:text-gray-200 transition-colors"
-          />
+          <a
+            href="https://wa.me/919789345333"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <FaWhatsapp
+              size={18}
+              className="cursor-pointer hover:text-gray-200 transition-colors"
+            />
+          </a>
         </div>
       </div>
 
@@ -206,7 +212,7 @@ export default function Header() {
         {/* Actions (Desktop) */}
         <div className="hidden md:flex items-center gap-6">
           <div className="text-sm text-black">
-            Hotline: <b className="text-[var(--primary)]">+1 800 123 4567</b>
+            Hotline: <b className="text-[var(--primary)]">9789345333</b>
           </div>
 
           <User

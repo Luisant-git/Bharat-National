@@ -40,7 +40,7 @@ export default function Footer() {
             {/* Map Link */}
             <li>
               <a
-                href="https://www.google.com/maps"
+                href="https://maps.app.goo.gl/ydSvPZEtURKrWLfb8"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block w-fit text-white font-semibold underline hover:text-primary transition-colors"
@@ -54,7 +54,13 @@ export default function Footer() {
               <FaFacebookF className="w-5 h-5 cursor-pointer hover:text-primary" />
               <FaInstagram className="w-5 h-5 cursor-pointer hover:text-primary" />
               <FaYoutube className="w-5 h-5 cursor-pointer hover:text-primary" />
-              <FaWhatsapp className="w-5 h-5 cursor-pointer hover:text-primary" />
+              <a
+                href="https://wa.me/919789345333"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FaWhatsapp className="w-5 h-5 cursor-pointer hover:text-primary" />
+              </a>
             </li>
           </ul>
         </div>
