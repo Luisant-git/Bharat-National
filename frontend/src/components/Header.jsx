@@ -120,17 +120,15 @@ export default function Header() {
 
   return (
     <header className="w-full bg-white">
-      {/* Top Info Bar (UNCHANGED) */}
-      <div className="bg-[var(--primary)] text-white px-4 py-2 flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0 shadow-sm">
-        <div className="flex flex-col sm:flex-row gap-1 sm:gap-6 items-center sm:items-start text-sm">
-          <span className="flex items-center gap-1">
-            <Phone size={16} /> 9789345333, 8903037883
-          </span>
-          <span className="flex items-center gap-1">
-            <Mail size={16} /> bncbalajicbe@gmail.com
-          </span>
-        </div>
-        <div className="flex gap-4 mt-2 sm:mt-0">
+      {/* Top Info Bar */}
+      <div className="bg-[var(--primary)] text-white px-4 py-2 flex flex-row justify-between items-center shadow-sm">
+        <span className="flex items-center gap-1 text-xs sm:text-sm">
+          <Phone size={14} className="sm:w-4 sm:h-4" /> <span className="hidden sm:inline">9789345333, 8903037883</span><span className="sm:hidden">9789345333</span>
+        </span>
+        <span className="flex items-center gap-1 text-[10px] sm:text-sm">
+          <Mail size={14} className="sm:w-4 sm:h-4" /> <span className="hidden sm:inline">bncbalajicbe@gmail.com</span><span className="sm:hidden">bncbalajicbe@gmail.com</span>
+        </span>
+        <div className="hidden sm:flex gap-4">
           <FaFacebookF
             size={18}
             className="cursor-pointer hover:text-gray-200 transition-colors"
@@ -264,20 +262,27 @@ export default function Header() {
         <div style={{ height: navHeight }} className="hidden md:block" />
       )}
 
-      {/* ✅ NAV BAR (ONLY CHANGED HERE) 
-          - Desktop: background SAME as your old nav
-          - Links: inactive black, active primary
-      */}
+      {/* ✅ NAV BAR */}
       <nav
         ref={navRef}
         className={[
           "px-4 py-3 font-medium text-sm border-b border-[var(--grey-300)] shadow-sm transition-all duration-200",
-          "bg-[var(--primary-lighthead)]", // ✅ keep same background as before
+          "bg-[var(--primary-lighthead)]",
           isDesktopSticky
             ? "md:fixed md:top-0 md:left-0 md:right-0 md:z-[9999]"
             : "relative",
         ].join(" ")}
       >
+        {/* Mobile social icons */}
+        <div className="flex md:hidden gap-4 justify-center pb-3">
+          <FaFacebookF size={18} className="cursor-pointer hover:text-[var(--primary)] transition-colors text-black" />
+          <FaInstagram size={18} className="cursor-pointer hover:text-[var(--primary)] transition-colors text-black" />
+          <FaTwitter size={18} className="cursor-pointer hover:text-[var(--primary)] transition-colors text-black" />
+          <a href="https://wa.me/919789345333" target="_blank" rel="noopener noreferrer">
+            <FaWhatsapp size={18} className="cursor-pointer hover:text-[var(--primary)] transition-colors text-black" />
+          </a>
+        </div>
+
         {/* Desktop links */}
         <div className="hidden md:flex items-center justify-between relative">
           <button

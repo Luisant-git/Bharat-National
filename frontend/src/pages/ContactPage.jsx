@@ -87,9 +87,11 @@ const ContactPage = () => {
                     Address
                   </p>
                   <p className="text-teal-50">
-                    123 Tech Park, IT Corridor,
+                    Floor No.: 0, Building No./Flat No.: 97/1-5,
                     <br />
-                    Chennai, India 600001
+                    NEHRU STREET, Coimbatore,
+                    <br />
+                    Tamil Nadu - 641009
                   </p>
                 </div>
 

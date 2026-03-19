@@ -30,11 +30,11 @@ export default function Footer() {
 
             {/* Address */}
             <li className="leading-relaxed">
-              123 Tech Park, IT Corridor,
+              Floor No.: 0, Building No./Flat No.: 97/1-5,
               <br />
-              Chennai, India 600001
+              NEHRU STREET, Coimbatore,
               <br />
-              (Near Central Railway Station)
+              Tamil Nadu - 641009
             </li>
 
             {/* Map Link */}

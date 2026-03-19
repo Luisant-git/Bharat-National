@@ -23,14 +23,7 @@ export default function ScrollToTopButton() {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   const openWhatsApp = () => {
-    const phone = import.meta.env.VITE_WHATSAPP_NUMBER;
-
-    if (!phone) {
-      console.error("WhatsApp number not configured");
-      return;
-    }
-
-    const url = `https://wa.me/${phone}`;
+    const url = `https://wa.me/919789345333`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
