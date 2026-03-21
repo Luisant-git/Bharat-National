@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Phone, Mail, User, ShoppingCart, Search, Menu, X } from "lucide-react";
-import Logo from "../icons/Logo";
+import Logo from "../assets/logo.jpeg"
 import { NavLink, useNavigate, Link } from "react-router-dom";
 
 import {
@@ -129,10 +129,16 @@ export default function Header() {
           <Mail size={14} className="sm:w-4 sm:h-4" /> <span className="hidden sm:inline">bncbalajicbe@gmail.com</span><span className="sm:hidden">bncbalajicbe@gmail.com</span>
         </span>
         <div className="hidden sm:flex gap-4">
-          <FaFacebookF
-            size={18}
-            className="cursor-pointer hover:text-gray-200 transition-colors"
-          />
+          <a
+            href="https://www.facebook.com/share/1EAEtbPJU8/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <FaFacebookF
+              size={18}
+              className="cursor-pointer hover:text-gray-200 transition-colors"
+            />
+          </a>
           <FaInstagram
             size={18}
             className="cursor-pointer hover:text-gray-200 transition-colors"
@@ -162,8 +168,12 @@ export default function Header() {
           className="flex items-center gap-3 cursor-pointer"
           onClick={closeAllMenus}
         >
-          <div className="w-10 h-10 p-2 bg-[var(--primary)] rounded-lg flex items-center justify-center shadow">
-            <Logo />
+          <div className="w-12 h-12 flex items-center justify-center ">
+            <img
+              src={Logo}
+              alt="logo"
+              className="w-[85%] h-[85%] object-contain"
+            />
           </div>
           <span className="font-bold text-2xl text-black">
             Bharat National Computers
@@ -275,7 +285,16 @@ export default function Header() {
       >
         {/* Mobile social icons */}
         <div className="flex md:hidden gap-4 justify-center pb-3">
-          <FaFacebookF size={18} className="cursor-pointer hover:text-[var(--primary)] transition-colors text-black" />
+          <a
+            href="https://www.facebook.com/share/1EAEtbPJU8/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <FaFacebookF
+              size={18}
+              className="cursor-pointer hover:text-[var(--primary)] transition-colors text-black"
+            />
+          </a>
           <FaInstagram size={18} className="cursor-pointer hover:text-[var(--primary)] transition-colors text-black" />
           <FaTwitter size={18} className="cursor-pointer hover:text-[var(--primary)] transition-colors text-black" />
           <a href="https://wa.me/919789345333" target="_blank" rel="noopener noreferrer">

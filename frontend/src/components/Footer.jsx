@@ -6,7 +6,7 @@ import {
   FaYoutube,
   FaWhatsapp,
 } from "react-icons/fa";
-import Logo from "../icons/Logo";
+import Logo from "../assets/logo.jpeg"
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -20,7 +20,13 @@ export default function Footer() {
           <ul className="space-y-4 text-gray-400 text-sm">
             {/* Logo */}
             <li className="flex items-center gap-3">
-              <Logo className="w-10 h-10 shrink-0" />
+              <div className="w-12 h-12 flex items-center justify-center ">
+                <img
+                  src={Logo}
+                  alt="logo"
+                  className="w-[85%] h-[85%] object-contain"
+                />
+              </div>
             </li>
 
             {/* Company Name */}
@@ -30,11 +36,11 @@ export default function Footer() {
 
             {/* Address */}
             <li className="leading-relaxed">
-              Floor No.: 0, Building No./Flat No.: 97/1-5,
+              Dno - 333- F2 - Geetha Building
               <br />
-              NEHRU STREET, Coimbatore,
+              Nehru St, Peranaidu Layout,Ram Nagar,
               <br />
-              Tamil Nadu - 641009
+              Coimbatore, Tamil Nadu 641009
             </li>
 
             {/* Map Link */}
@@ -51,13 +57,21 @@ export default function Footer() {
 
             {/* Social Icons */}
             <li className="flex items-center gap-4 pt-2">
-              <FaFacebookF className="w-5 h-5 cursor-pointer hover:text-primary" />
+              <a
+                href="https://www.facebook.com/share/1EAEtbPJU8/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-transform hover:scale-110"
+              >
+                <FaFacebookF className="w-5 h-5 cursor-pointer hover:text-primary" />
+              </a>
               <FaInstagram className="w-5 h-5 cursor-pointer hover:text-primary" />
               <FaYoutube className="w-5 h-5 cursor-pointer hover:text-primary" />
               <a
                 href="https://wa.me/919789345333"
                 target="_blank"
                 rel="noopener noreferrer"
+                className="transition-transform hover:scale-110"
               >
                 <FaWhatsapp className="w-5 h-5 cursor-pointer hover:text-primary" />
               </a>

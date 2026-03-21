@@ -87,11 +87,11 @@ const ContactPage = () => {
                     Address
                   </p>
                   <p className="text-teal-50">
-                    Floor No.: 0, Building No./Flat No.: 97/1-5,
+                  Dno - 333- F2 - Geetha Building, Nehru St,
                     <br />
-                    NEHRU STREET, Coimbatore,
+                    Peranaidu Layout,Ram Nagar,
                     <br />
-                    Tamil Nadu - 641009
+                    Coimbatore, Tamil Nadu 641009
                   </p>
                 </div>
 

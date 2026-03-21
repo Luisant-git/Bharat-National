@@ -1,6 +1,6 @@
 // src/components/ServerBrands.jsx
 import React from "react";
-import dell from "../assets/dell.png";
+import dell from "../assets/dell1.png";
 import hp from "../assets/hp.png";
 import lenova from "../assets/lenova.png";
 

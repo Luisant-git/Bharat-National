@@ -284,7 +284,7 @@ export default function ServicesPage() {
               <ul className="space-y-3 text-sm text-white/90">
                 {[
                   "Customer need not pay anything during AMC period.",
-                  "All services & spares will be provided by PALIES.",
+                  "All services & spares will be provided by BNC.",
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-start gap-3">
                     <span
