@@ -139,10 +139,17 @@ export default function Header() {
               className="cursor-pointer hover:text-gray-200 transition-colors"
             />
           </a>
-          <FaInstagram
-            size={18}
-            className="cursor-pointer hover:text-gray-200 transition-colors"
-          />
+          <a
+          href="https://www.instagram.com/bncbalaji?igsh=MThrZXo4M2IzeWRpeQ%3D%3D"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <FaInstagram
+              size={18}
+                   className="cursor-pointer hover:text-gray-200 transition-colors"
+              
+            />
+          </a>
           <FaTwitter
             size={18}
             className="cursor-pointer hover:text-gray-200 transition-colors"
@@ -295,7 +302,16 @@ export default function Header() {
               className="cursor-pointer hover:text-[var(--primary)] transition-colors text-black"
             />
           </a>
-          <FaInstagram size={18} className="cursor-pointer hover:text-[var(--primary)] transition-colors text-black" />
+          <a
+            href="https://www.instagram.com/bncbalaji?igsh=MThrZXo4M2IzeWRpeQ%3D%3D"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <FaInstagram
+              size={18}
+              className="cursor-pointer hover:text-[var(--primary)] transition-colors text-black"
+            />
+          </a>
           <FaTwitter size={18} className="cursor-pointer hover:text-[var(--primary)] transition-colors text-black" />
           <a href="https://wa.me/919789345333" target="_blank" rel="noopener noreferrer">
             <FaWhatsapp size={18} className="cursor-pointer hover:text-[var(--primary)] transition-colors text-black" />

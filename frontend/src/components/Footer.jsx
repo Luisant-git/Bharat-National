@@ -65,7 +65,15 @@ export default function Footer() {
               >
                 <FaFacebookF className="w-5 h-5 cursor-pointer hover:text-primary" />
               </a>
-              <FaInstagram className="w-5 h-5 cursor-pointer hover:text-primary" />
+              <a
+                href="https://www.instagram.com/bncbalaji?igsh=MThrZXo4M2IzeWRpeQ%3D%3D"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FaInstagram
+                  size={18}
+                  className="w-5 h-5 cursor-pointer hover:text-primary" />
+              </a>
               <FaYoutube className="w-5 h-5 cursor-pointer hover:text-primary" />
               <a
                 href="https://wa.me/919789345333"
