@@ -18,6 +18,25 @@ model Admin {
   updatedAt DateTime @updatedAt
 }
 
+model User{
+  id        Int    @id @default(autoincrement())
+  name      String
+  email     String? @unique
+  password  String?
+  address   String?
+  city      String?
+  state     String?
+  mobilenumber    String? @unique
+  pincode   String?
+  otp       String
+  otpExpiredAt  DateTime 
+  createdAt  DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orders        Order[]
+ 
+}
+
 model Category{
   id            Int      @id @default(autoincrement())
   name          String 
@@ -62,16 +81,21 @@ model Product{
 
 model Order {
   id          Int          @id @default(autoincrement())
-  cartId      String?       
+  userId        Int
   fullName    String
   email       String
   phone       String
+  address     String?
+  pincode     String?
+  paymentMethod String?
   place       String
   totalAmount Int
   isActive    Boolean      @default(true)
 
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+
+   user          User     @relation(fields: [userId], references: [id])   
 
   orderItem   OrderItem[]
 }

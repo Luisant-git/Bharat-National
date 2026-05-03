@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Phone, Mail, User, ShoppingCart, Search, Menu, X } from "lucide-react";
 import Logo from "../assets/logo.jpeg"
 import { NavLink, useNavigate, Link } from "react-router-dom";
@@ -12,13 +12,30 @@ import {
 import { getActiveCategories } from "../api/Category";
 import { loadCart } from "../utils/CartStorage";
 
+
+
+const getStoredUser = () => {
+  try {
+    const raw = localStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+const isLoggedIn = () => !!localStorage.getItem("authToken");
+const logoutUser = () => {
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("user");
+};
+
 export default function Header() {
   const [openNav, setOpenNav] = useState(false); // ✅ Mobile drawer
   const [openCategoryList, setOpenCategoryList] = useState(false);
-
+const [profileOpen, setProfileOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [catLoading, setCatLoading] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [user, setUser] = useState(() => getStoredUser());
 
   const [cartCount, setCartCount] = useState(0);
 
@@ -37,6 +54,8 @@ export default function Header() {
     { name: "Contact", path: "/contact" },
   ];
 
+
+
   // Load active categories
   useEffect(() => {
     const loadCategories = async () => {
@@ -53,6 +72,27 @@ export default function Header() {
     };
     loadCategories();
   }, []);
+
+
+    // Refresh user when storage changes
+  useEffect(() => {
+    const refresh = () => setUser(getStoredUser());
+    refresh();
+    window.addEventListener("storage", refresh);
+    return () => window.removeEventListener("storage", refresh);
+  }, []);
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    if (!profileOpen) return;
+    const handler = (e) => {
+      if (!e.target.closest("#profile-dropdown") && !e.target.closest("#profile-btn")) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [profileOpen]);
 
   // Cart count sync
   useEffect(() => {
@@ -78,6 +118,24 @@ export default function Header() {
     setOpenCategoryList(false);
   };
 
+
+    const handleLogout = () => {
+    logoutUser();
+    setUser(null);
+    setProfileOpen(false);
+    navigate("/");
+  };
+
+  const handleProfileClick = () => {
+    if (!isLoggedIn()) {
+      navigate("/login", { state: { redirectTo: window.location.pathname } });
+    } else {
+      setProfileOpen((p) => !p);
+    }
+  };
+
+  const userInitial = user?.name?.trim()?.[0]?.toUpperCase() || "U";
+  
   const toggleCategoryList = () => setOpenCategoryList((p) => !p);
 
   const handleCategoryClick = (cat) => {
@@ -225,15 +283,46 @@ export default function Header() {
         </div>
 
         {/* Actions (Desktop) */}
-        <div className="hidden md:flex items-center gap-6">
+              {/* Actions (Desktop) */}
+        <div className="hidden md:flex items-center gap-6 relative">
           <div className="text-sm text-black">
             Hotline: <b className="text-[var(--primary)]">9789345333</b>
           </div>
 
-          <User
-            size={22}
-            className="cursor-pointer hover:text-[var(--primary)] transition-colors"
-          />
+          {/* Profile Dropdown */}
+          <div className="relative">
+            <button
+              id="profile-btn"
+              type="button"
+              onClick={handleProfileClick}
+              className={`flex items-center justify-center w-9 h-9 rounded-full border transition-colors ${
+                isLoggedIn() 
+                  ? "bg-[var(--primary)] text-white border-[var(--primary)]" 
+                  : "bg-white text-gray-700 border-gray-300 hover:border-[var(--primary)] hover:text-[var(--primary)]"
+              }`}
+            >
+              {isLoggedIn() ? <span className="text-sm font-bold">{userInitial}</span> : <User size={18} />}
+            </button>
+
+            {profileOpen && isLoggedIn() && (
+              <div
+                id="profile-dropdown"
+                className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-lg shadow-xl text-sm z-50 overflow-hidden"
+              >
+                <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+                  <p className="text-xs text-gray-500">Signed in as</p>
+                  <p className="font-semibold text-gray-900 truncate">{user?.name || "User"}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                >
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
+          </div>
 
           <Link
             to="/cart"
@@ -248,8 +337,28 @@ export default function Header() {
           </Link>
         </div>
 
-        {/* Mobile Icons */}
+    
+                {/* Mobile Icons */}
         <div className="flex md:hidden items-center justify-between gap-4">
+          {/* Mobile Profile: Login if guest, Logout if authenticated */}
+          <button
+            type="button"
+            onClick={() => {
+              if (!isLoggedIn()) {
+                navigate("/login", { state: { redirectTo: window.location.pathname } });
+              } else {
+                handleLogout();
+              }
+            }}
+            className={`flex items-center justify-center w-8 h-8 rounded-full border ${
+              isLoggedIn() 
+                ? "bg-[var(--primary)] text-white border-[var(--primary)]" 
+                : "bg-white text-gray-700 border-gray-300"
+            }`}
+          >
+            {isLoggedIn() ? <span className="text-xs font-bold">{userInitial}</span> : <User size={16} />}
+          </button>
+
           <button
             type="button"
             onClick={() => navigate("/cart")}
@@ -403,7 +512,11 @@ export default function Header() {
             <div className="flex items-center justify-between p-4 border-b border-[var(--grey-300)]">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 p-2 bg-[var(--primary)] rounded-lg flex items-center justify-center">
-                  <Logo />
+                  <img
+    src={Logo}
+    alt="BNC Logo"
+    className="w-full h-full object-contain"
+  />
                 </div>
                 <span className="font-bold text-[15px] text-black">BNC</span>
               </div>

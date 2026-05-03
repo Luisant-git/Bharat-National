@@ -9,10 +9,12 @@ import { ProductModule } from './product/product.module';
 import { OrderModule } from './order/order.module';
 import { OrderitemModule } from './orderitem/orderitem.module';
 import { ContactModule } from './contact/contact.module';
+import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
 
 
 @Module({
-  imports: [AdminModule, CategoryModule, UploadModule, BrandModule, ProductModule, OrderModule, OrderitemModule, ContactModule],
+  imports: [AdminModule, CategoryModule, UploadModule, BrandModule, ProductModule, OrderModule, OrderitemModule, ContactModule, UserModule, AuthModule],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -1,6 +1,8 @@
+// ProductCard.jsx
 import React, { useState } from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify';
 import { addToCart } from "../utils/CartStorage";
 import { PrimaryButton } from "./FormControl";
 
@@ -18,6 +20,11 @@ const ProductCard = ({ product }) => {
 
   const priceNumber = Number(product.price) || 0;
 
+  // Check if user is authenticated
+  const isAuthenticated = () => {
+    return !!localStorage.getItem('authToken');
+  };
+
   const handleCardClick = () => {
     if (!product?.id) return;
     navigate(`/product/${product.id}`);
@@ -33,10 +40,36 @@ const ProductCard = ({ product }) => {
     e.stopPropagation();
     if (!product) return;
 
+    if (!isAuthenticated()) {
+      // Store product to add after login
+      const pendingItem = { product, quantity: 1 };
+      localStorage.setItem('pendingCartItem', JSON.stringify(pendingItem));
+      
+      toast.error('Please login to add items to cart', {
+        duration: 3000,
+        position: "top-right",
+      });
+      
+      // Navigate to signup page
+      navigate('/signup', {
+        state: { 
+          redirectTo: '/',
+          pendingCartItem: pendingItem
+        }
+      });
+      return;
+    }
+
+    // User is authenticated, add to cart
     addToCart(product, 1);
-     window.dispatchEvent(new Event("cart:open"));
+    window.dispatchEvent(new Event("cart:open"));
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1200);
+    
+    toast.success('Added to cart!', {
+      duration: 1500,
+      position: "top-right",
+    });
   };
 
   return (
@@ -52,9 +85,7 @@ const ProductCard = ({ product }) => {
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleCardClick}
     >
-      {/* IMAGE (shorter on mobile so details fit) */}
       <div className="relative w-full aspect-[4/3] md:aspect-square bg-white overflow-hidden flex items-center justify-center">
-        {/* Cart icon */}
         <button
           type="button"
           onClick={handleCartClick}
@@ -86,7 +117,6 @@ const ProductCard = ({ product }) => {
         />
       </div>
 
-      {/* DETAILS */}
       <div className="p-3 md:p-5 flex flex-col gap-2">
         {categoryLabel && (
           <div className="text-[11px] md:text-xs text-gray-500 font-medium uppercase tracking-wide">
@@ -101,7 +131,6 @@ const ProductCard = ({ product }) => {
           {product.name}
         </h3>
 
-        {/* Price always visible */}
         <div className="flex items-center justify-between pt-1">
           <span className="text-lg md:text-xl font-bold text-[#1A1A1A] whitespace-nowrap">
             {priceNumber.toLocaleString("en-IN", {
@@ -109,11 +138,8 @@ const ProductCard = ({ product }) => {
               currency: "INR",
             })}
           </span>
-
-          {/* Optional small add-to-cart on desktop only (price row stays clean on mobile) */}
         </div>
 
-        {/* Button */}
         <div
           className="
             pt-1

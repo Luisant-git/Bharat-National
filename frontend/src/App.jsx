@@ -16,6 +16,8 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CartDrawer from "./components/CartDrawer";
 import { useEffect, useState } from "react";
+import LoginPage from "./components/LoginPage";
+import SignupPage from "./components/SignupPage";
 
 function App() {
   const [cartOpen, setCartOpen] = useState(false);
@@ -56,6 +58,8 @@ function App() {
               <Route path="/contact" element={<ContactSection />} />
               <Route path="/cart" element={<CartPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
             </Routes>
           </main>
           <Footer />
