@@ -1,280 +1,405 @@
 // src/pages/AdminOverview.jsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
-  ShoppingCart,
-  DollarSign,
-  Package,
-  AlertTriangle,
+  IndianRupee,
   TrendingUp,
-  MoreHorizontal,
+  Users,
+  ShoppingCart,
+  Package,
+  UserPlus,
+  AlertTriangle,
+  Edit,
+  ArrowUpRight,
+  Clock,
+  RefreshCw,
+  Star,
+  Eye,
 } from "lucide-react";
+import { toast } from "react-toastify";
+import { getOverviewData } from "../api/overview";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+} from "recharts";
 
-const AdminOverview = () => {
+const formatCurrency = (value) =>
+  `₹${Number(value || 0).toLocaleString("en-IN")}`;
+
+const formatNumber = (value) =>
+  Number(value || 0).toLocaleString("en-IN");
+
+const formatTimeAgo = (date) => {
+  if (!date) return "Just now";
+  const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
+  
+  const intervals = {
+    year: 31536000,
+    month: 2592000,
+    week: 604800,
+    day: 86400,
+    hour: 3600,
+    minute: 60
+  };
+
+  for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+    const interval = Math.floor(seconds / secondsInUnit);
+    if (interval >= 1) {
+      return `${interval} ${unit}${interval === 1 ? '' : 's'} ago`;
+    }
+  }
+  
+  return 'Just now';
+};
+
+// Activity type configuration
+const activityConfig = {
+  NEW_ORDER: {
+    icon: ShoppingCart,
+    iconBg: "bg-blue-100",
+    iconColor: "text-blue-600",
+    label: "New Order",
+  },
+  NEW_CUSTOMER: {
+    icon: UserPlus,
+    iconBg: "bg-purple-100",
+    iconColor: "text-purple-600",
+    label: "New Customer",
+  },
+  PRODUCT_UPDATE: {
+    icon: Edit,
+    iconBg: "bg-amber-100",
+    iconColor: "text-amber-600",
+    label: "Product Update",
+  },
+  LOW_STOCK: {
+    icon: AlertTriangle,
+    iconBg: "bg-rose-100",
+    iconColor: "text-rose-600",
+    label: "Low Stock",
+  },
+};
+
+// Stat Card Component
+const StatCard = ({ title, value, icon: Icon, iconBg, iconColor, trend }) => (
+  <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all duration-200">
+    <div className="flex items-center justify-between">
+      <div className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center`}>
+        <Icon className={`w-6 h-6 ${iconColor}`} />
+      </div>
+      {trend && (
+        <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full flex items-center gap-1">
+          <ArrowUpRight className="w-3 h-3" />
+          {trend}
+        </span>
+      )}
+    </div>
+    <p className="text-2xl font-bold text-gray-900 mt-3">{value}</p>
+    <p className="text-sm text-gray-600 mt-1">{title}</p>
+  </div>
+);
+
+// Activity Item Component
+const ActivityItem = ({ activity, isLast }) => {
+  const config = activityConfig[activity.type] || activityConfig.NEW_ORDER;
+  const Icon = config.icon;
+
   return (
-    <div className="min-h-screen bg-slate-100">
-      {/* Page container */}
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        {/* Page header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-800">
-              Overview
-            </h1>
-            <p className="text-sm text-slate-500">
-              Quick snapshot of your electronics store performance.
-            </p>
-          </div>
-          <button className="px-3 py-1.5 text-sm border rounded-lg bg-white hover:bg-slate-50 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" />
-            Last 7 days
-          </button>
+    <div className={`flex items-start gap-3 py-3 ${!isLast ? "border-b border-gray-100" : ""}`}>
+      <div className={`w-8 h-8 rounded-full ${config.iconBg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+        <Icon className={`w-4 h-4 ${config.iconColor}`} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-gray-800 leading-snug">
+          {activity.message}
+        </p>
+        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+          <Clock className="w-3 h-3" />
+          {activity.time}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// Top Performer Item Component
+const TopPerformerItem = ({ product, rank, isLast }) => (
+  <div className={`flex items-center gap-3 py-3 ${!isLast ? "border-b border-gray-100" : ""}`}>
+    <div className="w-7 h-7 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+      {rank}
+    </div>
+    <div className="w-10 h-10 rounded-md bg-gray-100 overflow-hidden flex-shrink-0">
+      {product.imageUrl ? (
+        <img 
+          src={product.imageUrl} 
+          alt={product.name} 
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = "https://via.placeholder.com/40?text=No+Image";
+          }}
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <Package className="w-5 h-5 text-gray-400" />
         </div>
+      )}
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="text-sm font-medium text-gray-800 truncate">{product.name}</p>
+      <p className="text-xs text-gray-500">{product.sales} sales · {formatCurrency(product.revenue)}</p>
+    </div>
+    <ArrowUpRight className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+  </div>
+);
 
-        {/* Stats cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-          {/* Total Orders */}
-          <div className="bg-white rounded-xl border shadow-sm p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500">
-                Total Orders
-              </p>
-              <p className="mt-1 text-2xl font-semibold text-slate-800">
-                1,248
-              </p>
-              <p className="mt-1 text-xs text-emerald-600">
-                +8.4% vs last week
-              </p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-              <ShoppingCart className="w-5 h-5 text-blue-600" />
-            </div>
-          </div>
+// Main Component
+const AdminOverview = () => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-          {/* Revenue */}
-          <div className="bg-white rounded-xl border shadow-sm p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500">
-                Revenue
-              </p>
-              <p className="mt-1 text-2xl font-semibold text-slate-800">
-                ₹4,28,500
-              </p>
-              <p className="mt-1 text-xs text-emerald-600">
-                +12.1% vs last week
-              </p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-emerald-600" />
-            </div>
-          </div>
+  useEffect(() => {
+    loadData();
+  }, []);
 
-          {/* Products in stock */}
-          <div className="bg-white rounded-xl border shadow-sm p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500">
-                Products in Stock
-              </p>
-              <p className="mt-1 text-2xl font-semibold text-slate-800">382</p>
-              <p className="mt-1 text-xs text-slate-500">
-                Across 24 categories
-              </p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center">
-              <Package className="w-5 h-5 text-indigo-600" />
-            </div>
-          </div>
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const result = await getOverviewData();
+      console.log("Overview data:", result);
+      setData(result);
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.message || "Failed to load overview data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-          {/* Low stock alerts */}
-          <div className="bg-white rounded-xl border shadow-sm p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500">
-                Low Stock
-              </p>
-              <p className="mt-1 text-2xl font-semibold text-slate-800">9</p>
-              <p className="mt-1 text-xs text-amber-600">
-                Reorder trending items
-              </p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5 text-amber-500" />
-            </div>
-          </div>
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      const result = await getOverviewData();
+      setData(result);
+      toast.success("Data refreshed successfully");
+    } catch (err) {
+      toast.error("Failed to refresh data");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto py-10 px-4">
+        {/* Header Skeleton */}
+        <div className="mb-6">
+          <div className="h-8 w-36 bg-gray-200 rounded-lg animate-pulse mb-2" />
+          <div className="h-4 w-72 bg-gray-100 rounded animate-pulse" />
         </div>
+        
+        {/* Stats Cards Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-white rounded-xl border border-gray-200 p-5 h-28 animate-pulse" />
+          ))}
+        </div>
+        
+        {/* Chart Skeleton */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5 h-96 animate-pulse mb-6" />
+        
+        {/* Bottom Grid Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="bg-white rounded-xl border border-gray-200 p-5 h-96 animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
-        {/* Middle row: Sales overview + Top products */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-          {/* Sales overview card */}
-          <div className="bg-white rounded-xl border shadow-sm p-4 lg:col-span-2">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-slate-800">
-                Sales Overview
-              </h2>
-              <button className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1">
-                View details
-                <MoreHorizontal className="w-4 h-4" />
-              </button>
+  const { stats, recentActivity, topPerformers } = data || {};
+
+  const statCards = [
+    {
+      title: "Total Revenue",
+      value: formatCurrency(stats?.totalRevenue || 0),
+      icon: IndianRupee,
+      iconBg: "bg-emerald-50",
+      iconColor: "text-emerald-600",
+      trend: "+12.5%",
+    },
+    {
+      title: "Total Orders",
+      value: formatNumber(stats?.totalOrders || 0),
+      icon: ShoppingCart,
+      iconBg: "bg-blue-50",
+      iconColor: "text-blue-600",
+      trend: "+8.2%",
+    },
+    {
+      title: "Total Customers",
+      value: formatNumber(stats?.totalUsers || 0),
+      icon: Users,
+      iconBg: "bg-purple-50",
+      iconColor: "text-purple-600",
+      trend: "+5.3%",
+    },
+    {
+      title: "Avg. Order Value",
+      value: formatCurrency(stats?.avgOrderValue || 0),
+      icon: TrendingUp,
+      iconBg: "bg-amber-50",
+      iconColor: "text-amber-600",
+      trend: null,
+    },
+  ];
+
+  const chartData = stats?.chartData || [];
+
+  return (
+    <div className="max-w-7xl mx-auto py-6 sm:py-8 px-4 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Overview</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Complete business performance snapshot
+          </p>
+        </div>
+       
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCards.map((card, idx) => (
+          <StatCard key={idx} {...card} />
+        ))}
+      </div>
+
+      {/* Revenue Chart - Last 12 Months */}
+      {chartData.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">Revenue Trend</h2>
+              <p className="text-xs text-gray-500 mt-0.5">Last 12 months performance</p>
             </div>
-            {/* Placeholder for chart */}
-            <div className="h-40 rounded-lg border border-dashed border-slate-200 flex items-center justify-center text-xs text-slate-400">
-              Chart placeholder – plug your sales graph here
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-xs text-gray-500">Monthly Revenue</span>
             </div>
-            <div className="mt-3 flex gap-4 text-xs text-slate-500">
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+              <XAxis 
+                dataKey="month" 
+                tick={{ fontSize: 11, fill: "#94a3b8" }} 
+                interval={Math.floor(chartData.length / 6)}
+              />
+              <YAxis 
+                tick={{ fontSize: 11, fill: "#94a3b8" }} 
+                tickFormatter={(v) => `₹${v / 1000}k`}
+              />
+              <Tooltip
+                formatter={(value) => [formatCurrency(value), "Revenue"]}
+                contentStyle={{ 
+                  borderRadius: "8px", 
+                  border: "none", 
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                  padding: "8px 12px",
+                  fontSize: "12px"
+                }}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="revenue" 
+                stroke="#10b981" 
+                strokeWidth={2} 
+                fill="url(#revenueGradient)" 
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Bottom Grid - Recent Activity & Top Performers */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Activity */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/30">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="inline-block w-2 h-2 rounded-full bg-blue-500" />
-                Online Orders
+                <Clock className="w-4 h-4 text-gray-500" />
+                <h2 className="text-base font-semibold text-gray-900">Recent Activity</h2>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
-                COD Orders
-              </div>
+              <span className="text-[10px] text-gray-400">Last 10 activities</span>
             </div>
           </div>
-
-          {/* Top products */}
-          <div className="bg-white rounded-xl border shadow-sm p-4">
-            <h2 className="text-sm font-semibold text-slate-800 mb-3">
-              Top Selling Products
-            </h2>
-            <ul className="space-y-2">
-              <li className="flex items-center justify-between text-xs">
-                <div>
-                  <p className="font-medium text-slate-800">
-                    Wireless Bluetooth Headphones
-                  </p>
-                  <p className="text-slate-500">SKU: WH-102</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-slate-800">142</p>
-                  <p className="text-slate-500">units sold</p>
-                </div>
-              </li>
-              <li className="flex items-center justify-between text-xs">
-                <div>
-                  <p className="font-medium text-slate-800">
-                    65&quot; 4K Smart LED TV
-                  </p>
-                  <p className="text-slate-500">SKU: TV-6500</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-slate-800">87</p>
-                  <p className="text-slate-500">units sold</p>
-                </div>
-              </li>
-              <li className="flex items-center justify-between text-xs">
-                <div>
-                  <p className="font-medium text-slate-800">
-                    Fast Charging Adapter 33W
-                  </p>
-                  <p className="text-slate-500">SKU: CH-033</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-slate-800">210</p>
-                  <p className="text-slate-500">units sold</p>
-                </div>
-              </li>
-              <li className="flex items-center justify-between text-xs">
-                <div>
-                  <p className="font-medium text-slate-800">
-                    Gaming Mouse RGB Series
-                  </p>
-                  <p className="text-slate-500">SKU: GM-901</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-slate-800">63</p>
-                  <p className="text-slate-500">units sold</p>
-                </div>
-              </li>
-            </ul>
+          <div className="px-5 py-2 max-h-[400px] overflow-y-auto">
+            {recentActivity && recentActivity.length > 0 ? (
+              recentActivity.map((activity, idx) => (
+                <ActivityItem
+                  key={activity.id}
+                  activity={activity}
+                  isLast={idx === recentActivity.length - 1}
+                />
+              ))
+            ) : (
+              <div className="py-12 text-center text-gray-400">
+                <Clock className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                <p className="text-sm">No recent activity</p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Bottom row: Recent orders */}
-        <div className="bg-white rounded-xl border shadow-sm p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-slate-800">
-              Recent Orders
-            </h2>
-            <button className="text-xs text-slate-500 hover:text-slate-700">
-              View all
-            </button>
+        {/* Top Performers */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/30">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Star className="w-4 h-4 text-amber-500" />
+                <h2 className="text-base font-semibold text-gray-900">Top Performing Products</h2>
+              </div>
+              <span className="text-[10px] text-gray-400">By sales volume</span>
+            </div>
           </div>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-xs">
-              <thead>
-                <tr className="border-b bg-slate-50">
-                  <th className="text-left px-3 py-2 font-medium text-slate-600">
-                    Order #
-                  </th>
-                  <th className="text-left px-3 py-2 font-medium text-slate-600">
-                    Customer
-                  </th>
-                  <th className="text-left px-3 py-2 font-medium text-slate-600">
-                    Items
-                  </th>
-                  <th className="text-left px-3 py-2 font-medium text-slate-600">
-                    Amount
-                  </th>
-                  <th className="text-left px-3 py-2 font-medium text-slate-600">
-                    Status
-                  </th>
-                  <th className="text-right px-3 py-2 font-medium text-slate-600">
-                    Date
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b last:border-0">
-                  <td className="px-3 py-2 text-slate-800">#INV-2048</td>
-                  <td className="px-3 py-2 text-slate-600">Karthik</td>
-                  <td className="px-3 py-2 text-slate-600">
-                    2 × Headphone, 1 × Charger
-                  </td>
-                  <td className="px-3 py-2 text-slate-800">₹12,499</td>
-                  <td className="px-3 py-2">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] bg-emerald-50 text-emerald-700">
-                      Paid
-                    </span>
-                  </td>
-                  <td className="px-3 py-2 text-right text-slate-500">
-                    27 Nov
-                  </td>
-                </tr>
-                <tr className="border-b last:border-0">
-                  <td className="px-3 py-2 text-slate-800">#INV-2047</td>
-                  <td className="px-3 py-2 text-slate-600">Priya</td>
-                  <td className="px-3 py-2 text-slate-600">
-                    1 × 4K TV, 1 × Wall Mount
-                  </td>
-                  <td className="px-3 py-2 text-slate-800">₹48,990</td>
-                  <td className="px-3 py-2">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] bg-amber-50 text-amber-700">
-                      COD Pending
-                    </span>
-                  </td>
-                  <td className="px-3 py-2 text-right text-slate-500">
-                    27 Nov
-                  </td>
-                </tr>
-                <tr className="border-b last:border-0">
-                  <td className="px-3 py-2 text-slate-800">#INV-2046</td>
-                  <td className="px-3 py-2 text-slate-600">Rahul</td>
-                  <td className="px-3 py-2 text-slate-600">1 × Gaming Mouse</td>
-                  <td className="px-3 py-2 text-slate-800">₹1,899</td>
-                  <td className="px-3 py-2">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] bg-sky-50 text-sky-700">
-                      Shipped
-                    </span>
-                  </td>
-                  <td className="px-3 py-2 text-right text-slate-500">
-                    26 Nov
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div className="px-5 py-2 max-h-[400px] overflow-y-auto">
+            {topPerformers && topPerformers.length > 0 ? (
+              topPerformers.map((product, idx) => (
+                <TopPerformerItem
+                  key={product.id}
+                  product={product}
+                  rank={idx + 1}
+                  isLast={idx === topPerformers.length - 1}
+                />
+              ))
+            ) : (
+              <div className="py-12 text-center text-gray-400">
+                <Package className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                <p className="text-sm">No product data available</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+     
     </div>
   );
 };

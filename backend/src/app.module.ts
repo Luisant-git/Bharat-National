@@ -11,10 +11,12 @@ import { OrderitemModule } from './orderitem/orderitem.module';
 import { ContactModule } from './contact/contact.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { OverviewModule } from './overview/overview.module';
 
 
 @Module({
-  imports: [AdminModule, CategoryModule, UploadModule, BrandModule, ProductModule, OrderModule, OrderitemModule, ContactModule, UserModule, AuthModule],
+  imports: [AdminModule, CategoryModule, UploadModule, BrandModule, ProductModule, OrderModule, OrderitemModule, ContactModule, UserModule, AuthModule, DashboardModule, OverviewModule],
   controllers: [AppController],
   providers: [AppService],
 })
