@@ -751,7 +751,6 @@ const OrderList = () => {
                           </div>
                           <div className="flex-1">
                             <p className="font-bold text-sm text-slate-900 leading-snug mb-2">{it.productName || "Product"}</p>
-                            <p className="text-xs text-slate-500">Product ID: <span className="font-semibold text-slate-700">{it.productId}</span></p>
                             <p className="text-sm font-semibold text-slate-700 mt-1">Qty: {it.quantity} x {formatCurrency(it.unitPrice)}</p>
                             <p className="text-sm font-bold text-slate-900 mt-1">Total: {formatCurrency(Number(it.quantity || 0) * Number(it.unitPrice || 0))}</p>
                           </div>

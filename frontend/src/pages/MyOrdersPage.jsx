@@ -6,9 +6,6 @@ import {
   Loader2,
   ShoppingBag,
   Calendar,
-  Truck,
-  CheckCircle,
-  Sparkles,
 } from "lucide-react";
 import { getOrdersByUser } from "../api/Order";
 import { toast } from "react-toastify";
@@ -35,6 +32,44 @@ const formatDate = (iso) => {
 
 const formatCurrency = (val) =>
   `₹${Number(val || 0).toLocaleString("en-IN")}`;
+
+// Dynamic Status Configuration (matching admin panel)
+const statusConfig = {
+  PLACED: {
+    label: "Placed",
+    bg: "bg-orange-100",
+    text: "text-orange-700",
+    border: "border-orange-200",
+  },
+  ACCEPTED: {
+    label: "Accepted",
+    bg: "bg-slate-100",
+    text: "text-slate-700",
+    border: "border-slate-200",
+  },
+  SHIPPED: {
+    label: "Shipped",
+    bg: "bg-amber-100",
+    text: "text-amber-700",
+    border: "border-amber-200",
+  },
+  DELIVERED: {
+    label: "Delivered",
+    bg: "bg-emerald-100",
+    text: "text-emerald-700",
+    border: "border-emerald-200",
+  },
+  CANCELLED: {
+    label: "Cancelled",
+    bg: "bg-rose-100",
+    text: "text-rose-700",
+    border: "border-rose-200",
+  },
+};
+
+const getStatusConfig = (status) => {
+  return statusConfig[status] || statusConfig.PLACED;
+};
 
 // Image helper
 const getProductImage = (order) => {
@@ -69,25 +104,6 @@ const getItemCount = (order) => {
     return order.orderItem.length;
   }
   return 1;
-};
-
-const getStatusDetails = (order) => {
-  const createdAt = new Date(order.createdAt);
-  const now = new Date();
-  const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
-  
-  if (daysDiff > 7) return { label: "Delivered", icon: CheckCircle, color: "emerald" };
-  if (daysDiff > 3) return { label: "Shipped", icon: Truck, color: "blue" };
-  if (daysDiff > 1) return { label: "Processing", icon: Loader2, color: "amber" };
-  return { label: "Confirmed", icon: Sparkles, color: "purple" };
-};
-
-const statusConfig = {
-  Delivered: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
-  Shipped: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
-  Processing: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
-  Confirmed: { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200" },
-  Cancelled: { bg: "bg-rose-50", text: "text-rose-700", border: "border-rose-200" },
 };
 
 export default function MyOrdersPage() {
@@ -127,8 +143,8 @@ export default function MyOrdersPage() {
 
   const filteredOrders = orders.filter(order => {
     if (activeFilter === "all") return true;
-    const status = getStatusDetails(order).label.toLowerCase();
-    return status === activeFilter.toLowerCase();
+    const statusLabel = getStatusConfig(order.status).label.toLowerCase();
+    return statusLabel === activeFilter.toLowerCase();
   });
 
   const isEmpty = !loadingList && filteredOrders.length === 0;
@@ -144,16 +160,13 @@ export default function MyOrdersPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Hero Section with Breadcrumb */}
       <PageHeroBreadcrumb
         title="My Orders"
         currentLabel="Orders"
         bgColor="#0f615dff"
       />
 
-      {/* Main Content */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 md:px-8 py-8 md:py-10">
-        {/* Not Logged In */}
         {!user?.id && (
           <div className="bg-white rounded-xl border p-8 text-center shadow-sm">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "rgba(var(--primary-rgb), 0.1)" }}>
@@ -171,21 +184,18 @@ export default function MyOrdersPage() {
           </div>
         )}
 
-        {/* Loading */}
         {loadingList && (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-6 h-6 animate-spin" style={{ color: "var(--primary)" }} />
           </div>
         )}
 
-        {/* Error */}
         {error && !loadingList && (
           <div className="bg-red-50 border border-red-100 rounded-lg p-4 text-center">
             <p className="text-red-600 text-sm">{error}</p>
           </div>
         )}
 
-        {/* Empty State */}
         {isEmpty && user?.id && (
           <div className="bg-white rounded-xl border p-12 text-center shadow-sm">
             <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "rgba(var(--primary-rgb), 0.1)" }}>
@@ -203,10 +213,8 @@ export default function MyOrdersPage() {
           </div>
         )}
 
-        {/* Orders List */}
         {!loadingList && !error && filteredOrders.length > 0 && user?.id && (
           <div className="space-y-6">
-            {/* Stats Bar */}
             <div className="bg-white rounded-lg border p-4 flex items-center justify-between flex-wrap gap-3 shadow-sm">
               <div>
                 <p className="text-sm text-slate-600">Total Orders</p>
@@ -219,10 +227,16 @@ export default function MyOrdersPage() {
               </div>
             </div>
 
-            {/* Filters */}
             <div className="flex gap-2 flex-wrap">
-              {["all", "delivered", "shipped", "processing", "confirmed"].map((filter) => {
-                const labels = { all: "All Orders", delivered: "Delivered", shipped: "Shipped", processing: "Processing", confirmed: "Confirmed" };
+              {["all", "placed", "accepted", "shipped", "delivered", "cancelled"].map((filter) => {
+                const labels = { 
+                  all: "All Orders", 
+                  placed: "Placed", 
+                  accepted: "Accepted", 
+                  shipped: "Shipped", 
+                  delivered: "Delivered", 
+                  cancelled: "Cancelled" 
+                };
                 const isActive = activeFilter === filter;
                 return (
                   <button
@@ -244,11 +258,9 @@ export default function MyOrdersPage() {
               })}
             </div>
 
-            {/* Order Cards */}
             <div className="space-y-4">
               {filteredOrders.map((order) => {
-                const { label: status, icon: StatusIcon } = getStatusDetails(order);
-                const config = statusConfig[status] || statusConfig.Delivered;
+                const status = getStatusConfig(order.status);
                 const imageUrl = getProductImage(order);
                 const productName = getProductName(order);
                 const itemCount = getItemCount(order);
@@ -261,7 +273,6 @@ export default function MyOrdersPage() {
                     style={{ borderColor: "#e2e8f0" }}
                   >
                     <div className="p-5">
-                      {/* Header */}
                       <div className="flex items-center justify-between mb-3 pb-3 border-b" style={{ borderColor: "#f1f5f9" }}>
                         <div className="flex items-center gap-3">
                           <span className="text-sm font-semibold" style={{ color: "#0f172a" }}>
@@ -273,15 +284,12 @@ export default function MyOrdersPage() {
                             {formatDate(order.createdAt)}
                           </div>
                         </div>
-                        <div className={`${config.bg} ${config.text} px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 border ${config.border}`}>
-                          <StatusIcon className="w-3 h-3" />
-                          {status}
+                        <div className={`${status.bg} ${status.text} px-2.5 py-1 rounded-full text-xs font-semibold border ${status.border}`}>
+                          {status.label}
                         </div>
                       </div>
 
-                      {/* Content */}
                       <div className="flex gap-4">
-                        {/* Image */}
                         <div className="w-20 h-20 rounded-lg bg-slate-50 border overflow-hidden flex-shrink-0" style={{ borderColor: "#e2e8f0" }}>
                           {imageUrl ? (
                             <img 
@@ -300,7 +308,6 @@ export default function MyOrdersPage() {
                           )}
                         </div>
 
-                        {/* Details */}
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-slate-900 mb-1">
                             {productName}
@@ -316,7 +323,6 @@ export default function MyOrdersPage() {
                           </p>
                         </div>
 
-                        {/* Arrow */}
                         <div className="flex items-center">
                           <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" style={{ color: "var(--primary)" }} />
                         </div>

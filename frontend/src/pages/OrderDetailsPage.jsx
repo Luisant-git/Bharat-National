@@ -32,47 +32,37 @@ const getImageUrl = (item) => {
   return null;
 };
 
-// ✅ Status color helper
-const getStatusConfig = (status) => {
-  const value = String(status || "Placed").toLowerCase();
-
-  if (value.includes("placed")) {
-    return {
-      label: "Placed",
-      className: "bg-blue-50 text-blue-700 border-blue-100",
-      dot: "bg-blue-500",
-    };
-  }
-
-  if (value.includes("progress") || value.includes("processing")) {
-    return {
-      label: "In Progress",
-      className: "bg-amber-50 text-amber-700 border-amber-100",
-      dot: "bg-amber-500",
-    };
-  }
-
-  if (value.includes("delivered")) {
-    return {
-      label: "Delivered",
-      className: "bg-emerald-50 text-emerald-700 border-emerald-100",
-      dot: "bg-emerald-500",
-    };
-  }
-
-  if (value.includes("cancel")) {
-    return {
-      label: "Cancelled",
-      className: "bg-red-50 text-red-700 border-red-100",
-      dot: "bg-red-500",
-    };
-  }
-
-  return {
-    label: status || "Placed",
-    className: "bg-slate-50 text-slate-700 border-slate-100",
+// Dynamic Status Configuration (matching admin panel)
+const statusConfig = {
+  PLACED: {
+    label: "Placed",
+    className: "bg-orange-100 text-orange-700 border-orange-100",
+    dot: "bg-orange-500",
+  },
+  ACCEPTED: {
+    label: "Accepted",
+    className: "bg-slate-100 text-slate-700 border-slate-100",
     dot: "bg-slate-500",
-  };
+  },
+  SHIPPED: {
+    label: "Shipped",
+    className: "bg-amber-100 text-amber-700 border-amber-100",
+    dot: "bg-amber-500",
+  },
+  DELIVERED: {
+    label: "Delivered",
+    className: "bg-emerald-100 text-emerald-700 border-emerald-100",
+    dot: "bg-emerald-500",
+  },
+  CANCELLED: {
+    label: "Cancelled",
+    className: "bg-rose-100 text-rose-700 border-rose-100",
+    dot: "bg-rose-500",
+  },
+};
+
+const getStatusConfig = (status) => {
+  return statusConfig[status] || statusConfig.PLACED;
 };
 
 export default function OrderDetailsPage() {
@@ -104,7 +94,7 @@ export default function OrderDetailsPage() {
     return order.orderItem.reduce((sum, item) => sum + item.quantity, 0);
   }, [order]);
 
-  const statusConfig = getStatusConfig(order?.status || "Placed");
+  const status = getStatusConfig(order?.status || "PLACED");
 
   if (loading) {
     return (
@@ -143,19 +133,15 @@ export default function OrderDetailsPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      {/* Header */}
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-lg md:text-xl font-bold text-slate-950">
-              Order Details - #ORD-{order.id}
+              Order Details - #{order.id}
             </h1>
-           
           </div>
 
           <div className="flex items-center gap-3">
-            
-
             <button
               type="button"
               onClick={() => navigate(-1)}
@@ -167,12 +153,9 @@ export default function OrderDetailsPage() {
         </div>
       </div>
 
-      {/* Body */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <div className="grid lg:grid-cols-[0.9fr_1.35fr] gap-6">
-          {/* Left Column */}
           <div className="space-y-6">
-            {/* Order Information */}
             <section className="bg-white rounded-xl border border-slate-200 p-5 md:p-6 shadow-sm">
               <h2 className="text-base font-bold text-slate-950">
                 Order Information
@@ -201,12 +184,10 @@ export default function OrderDetailsPage() {
                 <div className="grid grid-cols-[90px_1fr] gap-2">
                   <p className="font-bold text-slate-950">Status:</p>
                   <span
-                    className={`inline-flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-bold ${statusConfig.className}`}
+                    className={`inline-flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-bold ${status.className}`}
                   >
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`}
-                    />
-                    {statusConfig.label}
+                    <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                    {status.label}
                   </span>
                 </div>
 
@@ -239,7 +220,6 @@ export default function OrderDetailsPage() {
               </div>
             </section>
 
-            {/* Shipping Address */}
             <section className="bg-white rounded-xl border border-slate-200 p-5 md:p-6 shadow-sm">
               <h2 className="text-base font-bold text-slate-950">
                 Shipping Address
@@ -278,7 +258,6 @@ export default function OrderDetailsPage() {
             </section>
           </div>
 
-          {/* Right Column */}
           <section className="bg-white rounded-xl border border-slate-200 p-5 md:p-6 shadow-sm">
             <h2 className="text-base font-bold text-slate-950">
               Order Items
@@ -294,26 +273,26 @@ export default function OrderDetailsPage() {
                     key={item.id}
                     className="rounded-xl border border-slate-200 bg-slate-50/60 p-3 md:p-4 flex gap-4"
                   >
-                    {/* Image */}
                     <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
                       {imageUrl ? (
                         <img
                           src={imageUrl}
                           alt={item.productName}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "https://via.placeholder.com/80?text=No+Image";
+                          }}
                         />
                       ) : (
                         <Package className="w-7 h-7 text-slate-300" />
                       )}
                     </div>
 
-                    {/* Details */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm md:text-base font-extrabold text-slate-950 leading-snug uppercase">
+                      <h3 className="text-sm md:text-base font-extrabold text-slate-950 leading-snug">
                         {item.productName}
                       </h3>
-
-                     
 
                       <p className="mt-2 text-sm text-slate-700">
                         Qty:{" "}
