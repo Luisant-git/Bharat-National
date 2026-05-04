@@ -89,7 +89,7 @@ export class OrderService {
     where: userId ? { userId } : {},
     orderBy: { createdAt: 'desc' },
     include: {
-      orderItem: true,
+      orderItem: { include: { product: true } },
     },
   });
 }
@@ -237,4 +237,112 @@ async getFilteredStats() {
     totalValue: totalValueData._sum.totalAmount || 0,
   };
 }
+
+async findValidOrders() {
+  const validStatuses = ['ACCEPTED', 'SHIPPED', 'DELIVERED'];
+
+  const orders = await this.prisma.order.findMany({
+    where: {
+      status: {
+        in: validStatuses,
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      orderItem: true,
+    },
+  });
+
+  return orders;
+}
+
+// Add this method to your OrderService
+async findAllWithUsers(userId?: number) {
+  const orders = await this.prisma.order.findMany({
+    where: userId ? { userId } : {},
+    orderBy: { createdAt: 'desc' },
+    include: {
+      orderItem: {
+        include: { product: true }
+      },
+      user: true,
+    },
+  });
+  return orders;
+}
+
+async getAllUsersWithOrderStats() {
+  const users = await this.prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      mobilenumber: true,
+      city: true,
+      createdAt: true,
+      orders: {
+        select: {
+          status: true,
+          totalAmount: true,
+          createdAt: true,
+          orderItem: {
+            select: {
+              quantity: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const result = users.map(user => {
+    const orders = user.orders || [];
+    
+    // Get successful orders (ACCEPTED, SHIPPED, DELIVERED)
+    const successfulOrders = orders.filter(o => 
+      ['ACCEPTED', 'SHIPPED', 'DELIVERED'].includes(o.status)
+    );
+    
+    const hasOrdered = successfulOrders.length > 0;
+    const hasCancelled = orders.some(o => o.status === 'CANCELLED');
+    const hasAbandoned = orders.some(o => o.status === 'ABANDONED');
+    
+    const totalSpent = successfulOrders
+      .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+    
+    const totalQuantity = successfulOrders
+      .flatMap(o => o.orderItem || [])
+      .reduce((sum, item) => sum + (item.quantity || 0), 0);
+
+    const lastOrderAt = successfulOrders.length > 0 
+      ? successfulOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0].createdAt
+      : null;
+
+    return {
+      id: user.id,
+      fullName: user.name,
+      email: user.email || "",
+      phone: user.mobilenumber || "",
+      city: user.city || "",
+      joinDate: user.createdAt,
+      lastOrderAt,
+      ordersCount: successfulOrders.length,  // ← Only ACCEPTED/SHIPPED/DELIVERED orders
+      totalSpent,
+      totalQuantity,
+      hasOrdered,
+      hasCancelled,
+      hasAbandoned,
+    };
+  });
+
+  // Sort by last order date
+  result.sort((a, b) => {
+    const aTime = a.lastOrderAt ? new Date(a.lastOrderAt).getTime() : 0;
+    const bTime = b.lastOrderAt ? new Date(b.lastOrderAt).getTime() : 0;
+    return bTime - aTime;
+  });
+
+  return result;
+}
+
 }

@@ -70,3 +70,27 @@ export async function deleteOrder(id) {
 
   return handleResponse(res);
 }
+
+
+export async function getUserStats() {
+  const res = await fetch(`${API_URL}/user/stats`, {
+    method: "GET",
+  });
+
+  return handleResponse(res);
+}
+
+export async function getValidOrders() {
+  const res = await fetch(`${API_URL}/order/valid`, {
+    method: "GET",
+  });
+
+  return handleResponse(res);
+}
+
+export async function getAllUsersWithOrderStats() {
+  const res = await fetch(`${API_URL}/order/users/all`, {
+    method: "GET",
+  });
+  return handleResponse(res);
+}

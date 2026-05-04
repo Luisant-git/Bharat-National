@@ -14,6 +14,7 @@ import {
   BadgeCheck,
   Search,
   Pencil,
+  FileSpreadsheet,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import html2canvas from "html2canvas";
@@ -22,7 +23,7 @@ import Pagination from "../CommonComponent/Pagination";
 import PageHeader from "../CommonComponent/PageHeader";
 import { getOrders, getOrderStatusStats, getSalesStats, updateOrder } from "../api/order";
 
-// Updated status list - removed ABANDONED
+// Updated status list
 const ORDER_STATUSES = [
   "PLACED",
   "ACCEPTED",
@@ -104,6 +105,20 @@ const isSameOrBeforeDate = (orderDate, filterDate) => {
   );
 };
 
+// Helper function to get image URL from product
+const getProductImageUrl = (item) => {
+  const product = item.product || {};
+  const imageUrl = product.imageUrl;
+  
+  if (Array.isArray(imageUrl) && imageUrl.length > 0) {
+    return imageUrl[0];
+  }
+  if (typeof imageUrl === "string" && imageUrl) {
+    return imageUrl;
+  }
+  return null;
+};
+
 const OrderList = () => {
   const [orders, setOrders] = useState([]);
   const [apiStatusStats, setApiStatusStats] = useState({});
@@ -126,14 +141,20 @@ const OrderList = () => {
   const [editStatusOrder, setEditStatusOrder] = useState(null);
   const [selectedNewStatus, setSelectedNewStatus] = useState("");
   const [stats, setStats] = useState({
-  totalSales: 0,
-  uniqueCustomers: 0,
-  totalQuantity: 0,
-  totalValue: 0,
-});
- 
+    totalSales: 0,
+    uniqueCustomers: 0,
+    totalQuantity: 0,
+    totalValue: 0,
+  });
+  
+  const [screenshotLoading, setScreenshotLoading] = useState({
+    statusCard: false,
+    salesCard: false,
+  });
 
   const modalRef = useRef(null);
+  const statusCardRef = useRef(null);
+  const salesCardRef = useRef(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -164,46 +185,38 @@ const OrderList = () => {
     fetchOrders();
   }, []);
 
-useEffect(() => {
-  const fetchStats = async () => {
-    try {
-      const res = await getSalesStats();
-
-      const data = res?.data || res;
-
-      setStats({
-        totalSales: data.totalSales || 0,
-        uniqueCustomers: data.uniqueCustomers || 0,
-        totalQuantity: data.totalQuantity || 0,
-        totalValue: data.totalValue || 0,
-      });
-
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  fetchStats();
-}, []);
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await getSalesStats();
+        const data = res?.data || res;
+        setStats({
+          totalSales: data.totalSales || 0,
+          uniqueCustomers: data.uniqueCustomers || 0,
+          totalQuantity: data.totalQuantity || 0,
+          totalValue: data.totalValue || 0,
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchStats();
+  }, []);
 
   useEffect(() => {
     setPage(1);
   }, [search, fromDate, toDate, activeStatus]);
-
-  
 
   const searchDateFiltered = useMemo(() => {
     let list = [...orders];
 
     if (search.trim()) {
       const q = search.toLowerCase();
-
       list = list.filter((o) => {
         const itemsText = (o.orderItem || [])
           .map((it) => `${it.productName || ""} ${it.product?.name || ""}`)
           .join(" ")
           .toLowerCase();
-
         return (
           o.fullName?.toLowerCase().includes(q) ||
           o.email?.toLowerCase().includes(q) ||
@@ -225,29 +238,26 @@ useEffect(() => {
     }
 
     list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
     return list;
   }, [orders, search, fromDate, toDate]);
 
-const currentStatusCounts = useMemo(() => {
-  const counts = {
-    PLACED: 0,
-    ACCEPTED: 0,
-    SHIPPED: 0,
-    DELIVERED: 0,
-    CANCELLED: 0,
-  };
+  const currentStatusCounts = useMemo(() => {
+    const counts = {
+      PLACED: 0,
+      ACCEPTED: 0,
+      SHIPPED: 0,
+      DELIVERED: 0,
+      CANCELLED: 0,
+    };
+    searchDateFiltered.forEach((o) => {
+      const status = (o.status || "PLACED").toUpperCase().trim();
+      if (counts[status] !== undefined) {
+        counts[status] += 1;
+      }
+    });
+    return counts;
+  }, [searchDateFiltered]);
 
-  searchDateFiltered.forEach((o) => {
-    const status = (o.status || "PLACED").toUpperCase().trim();
-
-    if (counts[status] !== undefined) {
-      counts[status] += 1;
-    }
-  });
-
-  return counts;
-}, [searchDateFiltered]);
   const filtered = useMemo(() => {
     if (activeStatus === "ALL") return searchDateFiltered;
     return searchDateFiltered.filter(
@@ -268,76 +278,121 @@ const currentStatusCounts = useMemo(() => {
     setPage(1);
   };
 
-  const handleDownload = () => {
+  const handleStatusCardScreenshot = async () => {
+    if (!statusCardRef.current) return;
+    try {
+      setScreenshotLoading(prev => ({ ...prev, statusCard: true }));
+      const canvas = await html2canvas(statusCardRef.current, { scale: 2, backgroundColor: "#ffffff" });
+      const link = document.createElement("a");
+      link.download = `order-status-summary-${new Date().toISOString().split('T')[0]}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      toast.success("Status card screenshot saved!");
+    } catch (err) {
+      toast.error("Failed to capture status card");
+    } finally {
+      setScreenshotLoading(prev => ({ ...prev, statusCard: false }));
+    }
+  };
+
+  const handleSalesCardScreenshot = async () => {
+    if (!salesCardRef.current) return;
+    try {
+      setScreenshotLoading(prev => ({ ...prev, salesCard: true }));
+      const canvas = await html2canvas(salesCardRef.current, { scale: 2, backgroundColor: "#ffffff" });
+      const link = document.createElement("a");
+      link.download = `sales-summary-${new Date().toISOString().split('T')[0]}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      toast.success("Sales card screenshot saved!");
+    } catch (err) {
+      toast.error("Failed to capture sales card");
+    } finally {
+      setScreenshotLoading(prev => ({ ...prev, salesCard: false }));
+    }
+  };
+
+  const handleSingleOrderDownload = (order) => {
+    const BOM = "\uFEFF";
+    const headers = ["Order ID", "Customer", "Email", "Phone", "Status", "Payment", "Date", "Items", "Quantity", "Total Amount"];
+    
+    const itemCount = order.orderItem?.length || 0;
+    const qty = (order.orderItem || []).reduce((sum, it) => sum + (Number(it.quantity) || 0), 0);
+    
+    const rows = [[
+      `"#ORD-${order.id}"`,
+      `"${(order.fullName || "").replace(/"/g, '""')}"`,
+      `"${(order.email || "").replace(/"/g, '""')}"`,
+      `"${(order.phone || "").replace(/"/g, '""')}\t"`,
+      `"${order.status || "PLACED"}"`,
+      `"${order.paymentMethod || ""}"`,
+      `"${formatDateTime(order.createdAt)}"`,
+      itemCount,
+      qty,
+      order.totalAmount || 0,
+    ]];
+
+    const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
+    const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `order-${order.id}-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    toast.success(`Order #ORD-${order.id} downloaded!`);
+  };
+
+  const handleBulkDownload = () => {
     if (filtered.length === 0) {
       toast.error("No data to download");
       return;
     }
 
+    const BOM = "\uFEFF";
     const headers = [
-      "Order ID",
-      "Customer",
-      "Email",
-      "Phone",
-      "Status",
-      "Payment",
-      "Date",
-      "Items",
-      "Quantity",
-      "Total Amount",
+      "Order ID", "Customer", "Email", "Phone", "Status", 
+      "Payment", "Date", "Items", "Quantity", "Total Amount"
     ];
 
     const rows = filtered.map((o) => {
       const itemCount = o.orderItem?.length || 0;
-      const qty = (o.orderItem || []).reduce(
-        (sum, it) => sum + (Number(it.quantity) || 0),
-        0
-      );
-
+      const qty = (o.orderItem || []).reduce((sum, it) => sum + (Number(it.quantity) || 0), 0);
       return [
-        `#ORD-${o.id}`,
-        o.fullName || "",
-        o.email || "",
-        o.phone || "",
-        o.status || "PLACED",
-        o.paymentMethod || "",
-        formatDateTime(o.createdAt),
+        `"#ORD-${o.id}"`,
+        `"${(o.fullName || "").replace(/"/g, '""')}"`,
+        `"${(o.email || "").replace(/"/g, '""')}"`,
+        `"${(o.phone || "").replace(/"/g, '""')}\t"`,
+        `"${o.status || "PLACED"}"`,
+        `"${o.paymentMethod || ""}"`,
+        `"${formatDateTime(o.createdAt)}"`,
         itemCount,
         qty,
         o.totalAmount || 0,
       ];
     });
 
-    const csvContent = [headers, ...rows]
-      .map((row) =>
-        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
-      )
-      .join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv" });
+    const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
+    const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
     const url = window.URL.createObjectURL(blob);
-
     const a = document.createElement("a");
     a.href = url;
-    a.download = "orders-report.csv";
+    const tabName = activeStatus === "ALL" ? "all-orders" : activeStatus.toLowerCase();
+    a.download = `orders-${tabName}-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
-
     window.URL.revokeObjectURL(url);
+    toast.success(`${filtered.length} orders downloaded!`);
   };
 
-  const handleScreenshot = async () => {
+  const handleViewModalScreenshot = async () => {
     if (!modalRef.current || !viewData) return;
-
     try {
-      const canvas = await html2canvas(modalRef.current, {
-        backgroundColor: "#ffffff",
-        scale: 2,
-      });
-
+      const canvas = await html2canvas(modalRef.current, { backgroundColor: "#ffffff", scale: 2 });
       const link = document.createElement("a");
-      link.download = `order-${viewData.id}.png`;
+      link.download = `order-${viewData.id}-details.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
+      toast.success("Order details screenshot saved!");
     } catch (err) {
       console.error(err);
       toast.error("Failed to download screenshot");
@@ -360,28 +415,14 @@ const currentStatusCounts = useMemo(() => {
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       setStatusUpdatingId(orderId);
-
       await updateOrder(orderId, { status: newStatus });
-
       setOrders((prev) =>
-        prev.map((order) =>
-          order.id === orderId ? { ...order, status: newStatus } : order
-        )
+        prev.map((order) => order.id === orderId ? { ...order, status: newStatus } : order)
       );
-
-      setViewData((prev) =>
-        prev?.id === orderId ? { ...prev, status: newStatus } : prev
-      );
-
-      setEditStatusOrder((prev) =>
-        prev?.id === orderId ? { ...prev, status: newStatus } : prev
-      );
-
+      setViewData((prev) => prev?.id === orderId ? { ...prev, status: newStatus } : prev);
+      setEditStatusOrder((prev) => prev?.id === orderId ? { ...prev, status: newStatus } : prev);
       await refreshStatusStats();
-
-      toast.success(
-        `Order status updated to ${getStatusConfig(newStatus).label}`
-      );
+      toast.success(`Order status updated to ${getStatusConfig(newStatus).label}`);
       setEditStatusOpen(false);
       setEditStatusOrder(null);
       setSelectedNewStatus("");
@@ -399,7 +440,6 @@ const currentStatusCounts = useMemo(() => {
   };
 
   const openEditStatus = (order) => {
-    // Prevent editing if status is CANCELLED or DELIVERED
     if (order.status === "CANCELLED" || order.status === "DELIVERED") {
       toast.warning("Cannot edit cancelled or delivered orders");
       return;
@@ -409,31 +449,29 @@ const currentStatusCounts = useMemo(() => {
     setEditStatusOpen(true);
   };
 
-  const tableRows = paginated;
-
   return (
     <div className="min-h-screen bg-slate-50 flex justify-center px-4 py-6">
       <div className="w-full max-w-7xl space-y-4">
         <PageHeader title="Orders" subtitle="Manage your customer orders" />
 
-        {/* Status Summary */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-4 md:p-5 shadow-sm">
+        {/* Status Summary Card */}
+        <div ref={statusCardRef} className="bg-white rounded-2xl border border-slate-200 p-4 md:p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-semibold text-slate-900">
-                Order Status Summary
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Count updates with search and date filters
-              </p>
+              <h3 className="font-semibold text-slate-900">Order Status Summary</h3>
+              <p className="text-xs text-slate-500 mt-0.5">Count updates with search and date filters</p>
             </div>
-
             <button
-              onClick={handleDownload}
-              className="flex items-center gap-1.5 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-emerald-700 transition"
+              onClick={handleStatusCardScreenshot}
+              disabled={screenshotLoading.statusCard}
+              className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs font-medium hover:bg-purple-700 transition disabled:opacity-50"
             >
-              <Download className="w-3.5 h-3.5" />
-              Download
+              {screenshotLoading.statusCard ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <ImageIcon className="w-3.5 h-3.5" />
+              )}
+              Screenshot
             </button>
           </div>
 
@@ -441,7 +479,6 @@ const currentStatusCounts = useMemo(() => {
             {ORDER_STATUSES.map((status) => {
               const cfg = getStatusConfig(status);
               const Icon = statusIconMap[status] || Package;
-
               return (
                 <button
                   type="button"
@@ -453,17 +490,12 @@ const currentStatusCounts = useMemo(() => {
                       : "border-slate-100 bg-slate-50/50 hover:bg-slate-100/70"
                   }`}
                 >
-                  <div
-                    className={`w-10 h-10 rounded-xl ${cfg.cardBg} flex items-center justify-center`}
-                  >
+                  <div className={`w-10 h-10 rounded-xl ${cfg.cardBg} flex items-center justify-center`}>
                     <Icon className={`w-5 h-5 ${cfg.cardColor}`} />
                   </div>
-
                   <div>
                     <p className="text-xs text-slate-500">{cfg.label}</p>
-                    <p className="text-lg font-bold text-slate-900">
-                      {currentStatusCounts?.[status] || 0}
-                    </p>
+                    <p className="text-lg font-bold text-slate-900">{currentStatusCounts?.[status] || 0}</p>
                   </div>
                 </button>
               );
@@ -471,74 +503,50 @@ const currentStatusCounts = useMemo(() => {
           </div>
         </div>
 
-        {/* Sales Summary */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-4 md:p-5 shadow-sm">
+        {/* Sales Summary Card */}
+        <div ref={salesCardRef} className="bg-white rounded-2xl border border-slate-200 p-4 md:p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-slate-900">Sales Summary</h3>
+            <button
+              onClick={handleSalesCardScreenshot}
+              disabled={screenshotLoading.salesCard}
+              className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs font-medium hover:bg-purple-700 transition disabled:opacity-50"
+            >
+              {screenshotLoading.salesCard ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <ImageIcon className="w-3.5 h-3.5" />
+              )}
+              Screenshot
+            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              {
-                label: "Total Orders",
-                val: stats.totalSales,
-                icon: Package,
-                color: "text-blue-600",
-                bg: "bg-blue-50",
-              },
-              {
-                label: "Total Customers",
-                val: stats.uniqueCustomers,
-                icon: Users,
-                color: "text-emerald-600",
-                bg: "bg-emerald-50",
-              },
-              {
-                label: "Total Quantity",
-                val: stats.totalQuantity,
-                icon: Layers,
-                color: "text-amber-600",
-                bg: "bg-amber-50",
-              },
-              {
-                label: "Total Value",
-                val: formatCurrency(stats.totalValue),
-                icon: Receipt,
-                color: "text-indigo-600",
-                bg: "bg-indigo-50",
-              },
+              { label: "Total Orders", val: stats.totalSales, icon: Package, color: "text-blue-600", bg: "bg-blue-50" },
+              { label: "Total Customers", val: stats.uniqueCustomers, icon: Users, color: "text-emerald-600", bg: "bg-emerald-50" },
+              { label: "Total Quantity", val: stats.totalQuantity, icon: Layers, color: "text-amber-600", bg: "bg-amber-50" },
+              { label: "Total Value", val: formatCurrency(stats.totalValue), icon: Receipt, color: "text-indigo-600", bg: "bg-indigo-50" },
             ].map((item, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-3 border border-slate-100 bg-slate-50/50 rounded-xl p-3"
-              >
-                <div
-                  className={`w-10 h-10 rounded-xl ${item.bg} flex items-center justify-center`}
-                >
+              <div key={idx} className="flex items-center gap-3 border border-slate-100 bg-slate-50/50 rounded-xl p-3">
+                <div className={`w-10 h-10 rounded-xl ${item.bg} flex items-center justify-center`}>
                   <item.icon className={`w-5 h-5 ${item.color}`} />
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">{item.label}</p>
-                  <p className="text-lg font-bold text-slate-900">
-                    {item.val}
-                  </p>
+                  <p className="text-lg font-bold text-slate-900">{item.val}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Status Tabs + Filters */}
+        {/* Orders Table */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          {/* Tabs */}
           <div className="px-4 pt-4 overflow-x-auto">
             <div className="flex items-center gap-8 min-w-max border-b border-slate-200">
               {[
-                {
-                  key: "ALL",
-                  label: "All",
-                  count: searchDateFiltered.length,
-                },
+                { key: "ALL", label: "All", count: searchDateFiltered.length },
                 ...ORDER_STATUSES.map((status) => ({
                   key: status,
                   label: getStatusConfig(status).label,
@@ -556,21 +564,13 @@ const currentStatusCounts = useMemo(() => {
                   }`}
                 >
                   {tab.label}
-                  {tab.key !== "ALL" && (
-                    <span className="ml-1 text-xs text-slate-500">
-                      ({tab.count})
-                    </span>
-                  )}
-
-                  {activeStatus === tab.key && (
-                    <span className="absolute left-0 right-0 -bottom-px h-[2px] bg-blue-600 rounded-full" />
-                  )}
+                  {tab.key !== "ALL" && <span className="ml-1 text-xs text-slate-500">({tab.count})</span>}
+                  {activeStatus === tab.key && <span className="absolute left-0 right-0 -bottom-px h-[2px] bg-blue-600 rounded-full" />}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Filter Area */}
           <div className="p-4 space-y-3">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
               <div className="relative w-full lg:max-w-[320px]">
@@ -588,45 +588,23 @@ const currentStatusCounts = useMemo(() => {
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex items-center gap-2 border border-slate-200 rounded-lg px-3 py-2 bg-white">
                   <span className="text-sm text-slate-600">From:</span>
-                  <input
-                    type="date"
-                    value={fromDate}
-                    onChange={(e) => setFromDate(e.target.value)}
-                    className="text-sm outline-none"
-                  />
+                  <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="text-sm outline-none" />
                 </div>
-
                 <div className="flex items-center gap-2 border border-slate-200 rounded-lg px-3 py-2 bg-white">
                   <span className="text-sm text-slate-600">To:</span>
-                  <input
-                    type="date"
-                    value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
-                    className="text-sm outline-none"
-                  />
+                  <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="text-sm outline-none" />
                 </div>
-
-                <button
-                  type="button"
-                  onClick={resetFilters}
-                  className="w-10 h-10 rounded-lg bg-blue-100 text-slate-700 hover:bg-blue-200 flex items-center justify-center"
-                  title="Reset filters"
-                >
+                <button onClick={resetFilters} className="w-10 h-10 rounded-lg bg-blue-100 text-slate-700 hover:bg-blue-200 flex items-center justify-center">
                   <X className="w-4 h-4" />
                 </button>
               </div>
-
-              <button
-                onClick={handleDownload}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700"
-              >
-                <Download className="w-4 h-4" />
-                Download Report
+              <button onClick={handleBulkDownload} className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700">
+                <FileSpreadsheet className="w-4 h-4" />
+                Download Excel
               </button>
             </div>
           </div>
 
-          {/* Custom Table */}
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-y border-slate-200">
@@ -639,128 +617,53 @@ const currentStatusCounts = useMemo(() => {
                   <th className="px-4 py-3 font-semibold">Status</th>
                   <th className="px-4 py-3 font-semibold">Payment</th>
                   <th className="px-4 py-3 font-semibold">Date</th>
-                  <th className="px-4 py-3 font-semibold text-right">
-                    Actions
-                  </th>
+                  <th className="px-4 py-3 font-semibold text-right">Actions</th>
                  </tr>
               </thead>
-
               <tbody>
                 {loading ? (
-                  <tr>
-                    <td colSpan={9} className="px-4 py-10 text-center text-slate-500">
-                      Loading orders...
-                    </td>
-                  </tr>
-                ) : tableRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="px-4 py-10 text-center text-slate-500">
-                      No orders found
-                    </td>
-                  </tr>
+                  <tr><td colSpan="9" className="px-4 py-10 text-center text-slate-500">Loading orders...</td></tr>
+                ) : paginated.length === 0 ? (
+                  <tr><td colSpan="9" className="px-4 py-10 text-center text-slate-500">No orders found</td></tr>
                 ) : (
-                  tableRows.map((o) => {
+                  paginated.map((o) => {
                     const cfg = getStatusConfig(o.status || "PLACED");
-
                     const productCount = o.orderItem?.length || 0;
-                    const quantity = (o.orderItem || []).reduce(
-                      (sum, it) => sum + (Number(it.quantity) || 0),
-                      0
-                    );
-
+                    const quantity = (o.orderItem || []).reduce((sum, it) => sum + (Number(it.quantity) || 0), 0);
                     return (
-                      <tr
-                        key={o.id}
-                        className="border-b border-slate-200 hover:bg-slate-50/70 transition"
-                      >
+                      <tr key={o.id} className="border-b border-slate-200 hover:bg-slate-50/70 transition">
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <span className="font-medium text-slate-900">
-                            #ORD-{o.id}
-                          </span>
+                          <span className="font-medium text-slate-900">#{o.id}</span>
                         </td>
-
                         <td className="px-4 py-4">
-                          <div className="font-semibold text-slate-900 leading-tight">
-                            {o.fullName || "Unknown"}
-                          </div>
-                          <div className="text-xs text-slate-500 leading-tight">
-                            {o.place || o.city || "-"}
-                          </div>
-                          <div className="text-xs text-slate-900 leading-tight">
-                            {o.phone || "-"}
-                          </div>
+                          <div className="font-semibold text-slate-900 leading-tight">{o.fullName || "Unknown"}</div>
+                          <div className="text-xs text-slate-500 leading-tight">{o.place || o.city || "-"}</div>
+                          <div className="text-xs text-slate-900 leading-tight">{o.phone || "-"}</div>
                         </td>
-
+                        <td className="px-4 py-4 whitespace-nowrap">{productCount} {productCount === 1 ? "item" : "items"}</td>
+                        <td className="px-4 py-4 whitespace-nowrap">{quantity}</td>
+                        <td className="px-4 py-4 whitespace-nowrap font-semibold text-slate-900">{formatCurrency(o.totalAmount)}</td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          {productCount} {productCount === 1 ? "item" : "items"}
+                          <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${cfg.pill}`}>{cfg.label}</span>
                         </td>
-
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          {quantity}
-                        </td>
-
-                        <td className="px-4 py-4 whitespace-nowrap font-semibold text-slate-900">
-                          {formatCurrency(o.totalAmount)}
-                        </td>
-
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <span
-                            className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${cfg.pill}`}
-                          >
-                            {cfg.label}
-                          </span>
-                        </td>
-
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          {o.paymentMethod || "-"}
-                        </td>
-
-                        <td className="px-4 py-4 min-w-[130px]">
-                          {formatDateTime(o.createdAt)}
-                        </td>
-
+                        <td className="px-4 py-4 whitespace-nowrap">{o.paymentMethod || "-"}</td>
+                        <td className="px-4 py-4 min-w-[130px]">{formatDateTime(o.createdAt)}</td>
                         <td className="px-4 py-4">
                           <div className="flex justify-end gap-2">
-                            <button
-                              type="button"
-                              onClick={() => openViewModal(o)}
-                              className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white flex items-center justify-center transition"
-                              title="View"
-                            >
+                            <button onClick={() => openViewModal(o)} className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white flex items-center justify-center transition" title="View">
                               <Eye className="w-4 h-4" />
                             </button>
-
-                            {/* Edit button - disabled for CANCELLED or DELIVERED */}
                             {(o.status !== "CANCELLED" && o.status !== "DELIVERED") ? (
-                              <button
-                                type="button"
-                                onClick={() => openEditStatus(o)}
-                                className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-500 hover:text-white flex items-center justify-center transition"
-                                title="Edit Status"
-                              >
+                              <button onClick={() => openEditStatus(o)} className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-500 hover:text-white flex items-center justify-center transition" title="Edit Status">
                                 <Pencil className="w-4 h-4" />
                               </button>
                             ) : (
-                              <button
-                                type="button"
-                                disabled
-                                className="w-8 h-8 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed flex items-center justify-center"
-                                title="Cannot edit cancelled or delivered orders"
-                              >
+                              <button disabled className="w-8 h-8 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed flex items-center justify-center" title="Cannot edit">
                                 <Pencil className="w-4 h-4" />
                               </button>
                             )}
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setViewData(o);
-                                setTimeout(handleScreenshot, 200);
-                              }}
-                              className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-600 hover:text-white flex items-center justify-center transition"
-                              title="Download"
-                            >
-                              <Download className="w-4 h-4" />
+                            <button onClick={() => handleSingleOrderDownload(o)} className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white flex items-center justify-center transition" title="Download Excel">
+                              <FileSpreadsheet className="w-4 h-4" />
                             </button>
                           </div>
                         </td>
@@ -773,204 +676,90 @@ const currentStatusCounts = useMemo(() => {
           </div>
 
           <div className="p-4 border-t border-slate-200">
-            <Pagination
-              page={safePage}
-              totalPages={totalPages}
-              onChange={setPage}
-            />
+            <Pagination page={safePage} totalPages={totalPages} onChange={setPage} />
           </div>
         </div>
 
-        {/* View Modal */}
+        {/* View Modal with Product Images */}
         {viewModalOpen && viewData && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div
-              ref={modalRef}
-              className="bg-white w-full max-w-5xl rounded-xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col relative"
-            >
+            <div ref={modalRef} className="bg-white w-full max-w-5xl rounded-xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col relative">
               <div className="flex justify-between items-center p-4 border-b bg-white">
                 <div>
-                  <h2 className="font-bold text-lg text-slate-800">
-                    Order Details - #ORD-{viewData.id}
-                  </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Customer, shipping and item details
-                  </p>
+                  <h2 className="font-bold text-lg text-slate-800">Order Details - #{viewData.id}</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">Customer, shipping and item details</p>
                 </div>
-
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={handleScreenshot}
-                    className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white flex items-center justify-center transition"
-                    title="Download Screenshot"
-                  >
+                  <button onClick={handleViewModalScreenshot} className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white flex items-center justify-center transition" title="Screenshot">
                     <ImageIcon className="w-5 h-5" />
                   </button>
-
-                  <button
-                    className="w-9 h-9 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-900 flex items-center justify-center transition"
-                    onClick={() => {
-                      setViewModalOpen(false);
-                      setViewData(null);
-                    }}
-                  >
+                  <button onClick={() => { setViewModalOpen(false); setViewData(null); }} className="w-9 h-9 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-900 flex items-center justify-center transition">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
               </div>
-
               <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-[350px_1fr] gap-6 bg-slate-50">
                 <div className="space-y-6">
                   <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-                    <h3 className="font-bold text-slate-800 mb-4 border-b pb-2">
-                      Order Information
-                    </h3>
-
+                    <h3 className="font-bold text-slate-800 mb-4 border-b pb-2">Order Information</h3>
                     <div className="space-y-3 text-sm">
-                      <p>
-                        <span className="font-semibold text-slate-600">
-                          Customer:
-                        </span>{" "}
-                        {viewData.fullName || "-"}
-                      </p>
-
-                      <p>
-                        <span className="font-semibold text-slate-600">
-                          Email:
-                        </span>{" "}
-                        {viewData.email || "-"}
-                      </p>
-
+                      <p><span className="font-semibold text-slate-600">Customer:</span> {viewData.fullName || "-"}</p>
+                      <p><span className="font-semibold text-slate-600">Email:</span> {viewData.email || "-"}</p>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-slate-600">
-                          Status:
+                        <span className="font-semibold text-slate-600">Status:</span>
+                        <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold ${getStatusConfig(viewData.status || "PLACED").pill}`}>
+                          {getStatusConfig(viewData.status || "PLACED").label}
                         </span>
-                        {(() => {
-                          const cfg = getStatusConfig(
-                            viewData.status || "PLACED"
-                          );
-                          return (
-                            <span
-                              className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold ${cfg.pill}`}
-                            >
-                              {cfg.label}
-                            </span>
-                          );
-                        })()}
                       </div>
-
-                      <p>
-                        <span className="font-semibold text-slate-600">
-                          Payment:
-                        </span>{" "}
-                        {viewData.paymentMethod?.toLowerCase() || "online"}
-                      </p>
-
+                      <p><span className="font-semibold text-slate-600">Payment:</span> {viewData.paymentMethod?.toLowerCase() || "online"}</p>
                       <div className="border-t pt-3 mt-2 space-y-1">
-                        <p className="font-bold text-base pt-1">
-                          <span className="text-slate-700">Total:</span>{" "}
-                          {formatCurrency(viewData.totalAmount)}
-                        </p>
+                        <p className="font-bold text-base pt-1"><span className="text-slate-700">Total:</span> {formatCurrency(viewData.totalAmount)}</p>
                       </div>
                     </div>
                   </div>
-
                   <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-                    <h3 className="font-bold text-slate-800 mb-4 border-b pb-2">
-                      Shipping Address
-                    </h3>
-
+                    <h3 className="font-bold text-slate-800 mb-4 border-b pb-2">Shipping Address</h3>
                     <div className="space-y-3 text-sm">
-                      <p>
-                        <span className="font-semibold text-slate-600">
-                          Address:
-                        </span>{" "}
-                        {viewData.address || "N/A"}
-                      </p>
-
-                      <p>
-                        <span className="font-semibold text-slate-600">
-                          City:
-                        </span>{" "}
-                        {viewData.city || viewData.place || "N/A"}
-                      </p>
-
-                      <p>
-                        <span className="font-semibold text-slate-600">
-                          Pincode:
-                        </span>{" "}
-                        {viewData.pincode || "N/A"}
-                      </p>
-
-                      <p>
-                        <span className="font-semibold text-slate-600">
-                          Phone:
-                        </span>{" "}
-                        {viewData.phone || "N/A"}
-                      </p>
+                      <p><span className="font-semibold text-slate-600">Address:</span> {viewData.address || "N/A"}</p>
+                      <p><span className="font-semibold text-slate-600">City:</span> {viewData.city || viewData.place || "N/A"}</p>
+                      <p><span className="font-semibold text-slate-600">Pincode:</span> {viewData.pincode || "N/A"}</p>
+                      <p><span className="font-semibold text-slate-600">Phone:</span> {viewData.phone || "N/A"}</p>
                     </div>
                   </div>
                 </div>
-
                 <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-                  <h3 className="font-bold text-slate-800 mb-4 border-b pb-2">
-                    Order Items
-                  </h3>
-
+                  <h3 className="font-bold text-slate-800 mb-4 border-b pb-2">Order Items</h3>
                   <div className="space-y-4">
                     {viewData.orderItem?.map((it, idx) => {
-                      const p = it.product || {};
-                      const img =
-                        (Array.isArray(p.imageUrl)
-                          ? p.imageUrl[0]
-                          : p.imageUrl) ||
-                        p.image ||
-                        "";
-
+                      const imageUrl = getProductImageUrl(it);
                       return (
-                        <div
-                          key={idx}
-                          className="flex gap-4 p-3 border border-slate-100 rounded-xl bg-slate-50/50"
-                        >
-                          <img
-                            src={img || "https://via.placeholder.com/80"}
-                            alt={it.productName || p.name || "Product"}
-                            className="w-16 h-16 object-cover rounded-lg border border-slate-200 bg-white"
-                          />
-
+                        <div key={idx} className="flex gap-4 p-3 border border-slate-100 rounded-xl bg-slate-50/50">
+                          <div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center border border-slate-200">
+                            {imageUrl ? (
+                              <img 
+                                src={imageUrl} 
+                                alt={it.productName || "Product"}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = "https://via.placeholder.com/80?text=No+Image";
+                                }}
+                              />
+                            ) : (
+                              <Package className="w-6 h-6 text-slate-300" />
+                            )}
+                          </div>
                           <div className="flex-1">
-                            <p className="font-bold text-sm text-slate-900 leading-snug mb-2">
-                              {it.productName || p.name || "Product"}
-                            </p>
-
-                            <p className="text-xs text-slate-500">
-                              Product ID:{" "}
-                              <span className="font-semibold text-slate-700">
-                                {it.productId}
-                              </span>
-                            </p>
-
-                            <p className="text-sm font-semibold text-slate-700 mt-1">
-                              Qty: {it.quantity} ×{" "}
-                              {formatCurrency(it.unitPrice)}
-                            </p>
-
-                            <p className="text-sm font-bold text-slate-900 mt-1">
-                              Total:{" "}
-                              {formatCurrency(
-                                Number(it.quantity || 0) *
-                                  Number(it.unitPrice || 0)
-                              )}
-                            </p>
+                            <p className="font-bold text-sm text-slate-900 leading-snug mb-2">{it.productName || "Product"}</p>
+                            <p className="text-xs text-slate-500">Product ID: <span className="font-semibold text-slate-700">{it.productId}</span></p>
+                            <p className="text-sm font-semibold text-slate-700 mt-1">Qty: {it.quantity} x {formatCurrency(it.unitPrice)}</p>
+                            <p className="text-sm font-bold text-slate-900 mt-1">Total: {formatCurrency(Number(it.quantity || 0) * Number(it.unitPrice || 0))}</p>
                           </div>
                         </div>
                       );
                     })}
-
                     {!viewData.orderItem?.length && (
-                      <div className="text-sm text-slate-500 text-center py-8">
-                        No items found for this order.
-                      </div>
+                      <div className="text-sm text-slate-500 text-center py-8">No items found for this order.</div>
                     )}
                   </div>
                 </div>
@@ -979,83 +768,31 @@ const currentStatusCounts = useMemo(() => {
           </div>
         )}
 
-        {/* Edit Status Modal - White background with dropdown */}
+        {/* Edit Status Modal */}
         {editStatusOpen && editStatusOrder && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
             <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
               <div className="flex items-center justify-between p-5 border-b">
                 <div>
-                  <h3 className="font-bold text-lg text-slate-900">
-                    Update Order Status
-                  </h3>
-                  <p className="text-sm text-slate-500 mt-0.5">
-                    Order #{editStatusOrder.id}
-                  </p>
+                  <h3 className="font-bold text-lg text-slate-900">Update Order Status</h3>
+                  <p className="text-sm text-slate-500 mt-0.5">Order #{editStatusOrder.id}</p>
                 </div>
-
-                <button
-                  onClick={() => {
-                    setEditStatusOpen(false);
-                    setEditStatusOrder(null);
-                    setSelectedNewStatus("");
-                  }}
-                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition"
-                >
+                <button onClick={() => { setEditStatusOpen(false); setEditStatusOrder(null); setSelectedNewStatus(""); }} className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition">
                   <X className="w-4 h-4" />
                 </button>
               </div>
-
               <div className="p-5">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Select Status
-                </label>
-                <select
-                  value={selectedNewStatus}
-                  onChange={(e) => setSelectedNewStatus(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:border-[var(--primary,#00897B)] focus:ring-1 focus:ring-[var(--primary,#00897B)] text-sm"
-                >
-                  {ORDER_STATUSES.filter(status => {
-                    // Once cancelled or delivered, can't change
-                    if (editStatusOrder.status === "CANCELLED" || editStatusOrder.status === "DELIVERED") {
-                      return false;
-                    }
-                    return true;
-                  }).map((status) => {
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Select Status</label>
+                <select value={selectedNewStatus} onChange={(e) => setSelectedNewStatus(e.target.value)} className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:border-[var(--primary,#00897B)] focus:ring-1 focus:ring-[var(--primary,#00897B)] text-sm">
+                  {ORDER_STATUSES.filter(status => !(editStatusOrder.status === "CANCELLED" || editStatusOrder.status === "DELIVERED")).map((status) => {
                     const cfg = getStatusConfig(status);
-                    return (
-                      <option key={status} value={status}>
-                        {cfg.label}
-                      </option>
-                    );
+                    return <option key={status} value={status}>{cfg.label}</option>;
                   })}
                 </select>
-
                 <div className="flex gap-3 mt-6">
-                  <button
-                    onClick={() => {
-                      setEditStatusOpen(false);
-                      setEditStatusOrder(null);
-                      setSelectedNewStatus("");
-                    }}
-                    className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() =>
-                      handleStatusChange(editStatusOrder.id, selectedNewStatus)
-                    }
-                    disabled={statusUpdatingId === editStatusOrder.id}
-                    className="flex-1 px-4 py-2.5 bg-[var(--primary,#00897B)] text-white rounded-lg text-sm font-semibold hover:bg-[var(--primary-dark,#00695C)] transition disabled:opacity-50"
-                  >
-                    {statusUpdatingId === editStatusOrder.id ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Updating...
-                      </div>
-                    ) : (
-                      "Update Status"
-                    )}
+                  <button onClick={() => { setEditStatusOpen(false); setEditStatusOrder(null); setSelectedNewStatus(""); }} className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 transition">Cancel</button>
+                  <button onClick={() => handleStatusChange(editStatusOrder.id, selectedNewStatus)} disabled={statusUpdatingId === editStatusOrder.id} className="flex-1 px-4 py-2.5 bg-[var(--primary,#00897B)] text-white rounded-lg text-sm font-semibold hover:bg-[var(--primary-dark,#00695C)] transition disabled:opacity-50">
+                    {statusUpdatingId === editStatusOrder.id ? <div className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Updating...</div> : "Update Status"}
                   </button>
                 </div>
               </div>

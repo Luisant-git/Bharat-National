@@ -28,6 +28,7 @@ findAll(@Query('userId') userId?: string) {
   return this.orderService.findAll(userId ? Number(userId) : undefined);
 }
 
+
   // ✅ Get Active Orders
   @Get('active')
   findActive() {
@@ -44,12 +45,30 @@ findAll(@Query('userId') userId?: string) {
   async getSalesStats() {
     return this.orderService.getFilteredStats();
   }
-  
+
+  @Get('valid')
+findValidOrders() {
+  return this.orderService.findValidOrders();
+}
+
  @Get('status-stats')
 getStatusStats() {
   return this.orderService.getOrderStatusStats();
 }
 
+
+
+// Add these endpoints to your OrderController
+
+@Get('users/all')
+async getAllUsersWithOrderStats() {
+  return this.orderService.getAllUsersWithOrderStats();
+}
+
+@Get('all/with-users')
+async findAllWithUsers(@Query('userId') userId?: string) {
+  return this.orderService.findAllWithUsers(userId ? Number(userId) : undefined);
+}
 
 @Get(':id')
 findOne(@Param('id', ParseIntPipe) id: number) {
