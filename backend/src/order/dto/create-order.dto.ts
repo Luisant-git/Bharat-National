@@ -95,4 +95,11 @@ email?: string;
   @Type(() => OrderItemInputDto)
   @ArrayMinSize(1)
   items: OrderItemInputDto[];
+
+    @ApiPropertyOptional({
+    example: 'PENDING',
+  })
+
+  @IsString()
+  status: string;
 }

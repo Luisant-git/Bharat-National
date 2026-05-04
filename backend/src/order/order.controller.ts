@@ -39,11 +39,23 @@ findAll(@Query('userId') userId?: string) {
     return this.orderService.findLastByUser(Number(userId));
   }
 
-  // ✅ Get One Order
-  @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.orderService.findOne(id);
+
+  @Get('stats')
+  async getSalesStats() {
+    return this.orderService.getFilteredStats();
   }
+  
+ @Get('status-stats')
+getStatusStats() {
+  return this.orderService.getOrderStatusStats();
+}
+
+
+@Get(':id')
+findOne(@Param('id', ParseIntPipe) id: number) {
+  return this.orderService.findOne(id);
+}
+
 
   // ✅ Update Order
   @Patch(':id')

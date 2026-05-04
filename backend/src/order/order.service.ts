@@ -67,6 +67,7 @@ export class OrderService {
         place: createOrderDto.place,
         pincode: createOrderDto.pincode,
         paymentMethod: createOrderDto.paymentMethod,
+   status: 'PLACED',
         totalAmount,
         orderItem: {
           create: orderItemData,
@@ -176,5 +177,64 @@ export class OrderService {
   }
 
   return order;
+}
+
+async getOrderStatusStats() {
+  const statuses = ['PLACED', 'ACCEPTED', 'SHIPPED', 'DELIVERED','CANCELLED',];
+
+  const results = await Promise.all(
+    statuses.map(async (status) => {
+      const count = await this.prisma.order.count({
+        where: { status },
+      });
+
+      return { status, count };
+    }),
+  );
+
+  return {
+    total: results.reduce((sum, r) => sum + r.count, 0),
+    data: results,
+  };
+}
+
+async getFilteredStats() {
+  const validStatuses = ['ACCEPTED', 'SHIPPED', 'DELIVERED'];
+
+  const totalSales = await this.prisma.order.count({
+    where: {
+      status: { in: validStatuses },
+    },
+  });
+
+  const uniqueCustomersData = await this.prisma.order.groupBy({
+    by: ['userId'],
+    where: {
+      status: { in: validStatuses },
+    },
+  });
+
+  const totalQuantityData = await this.prisma.orderItem.aggregate({
+    _sum: { quantity: true },
+    where: {
+      order: {
+        status: { in: validStatuses },
+      },
+    },
+  });
+
+  const totalValueData = await this.prisma.order.aggregate({
+    _sum: { totalAmount: true },
+    where: {
+      status: { in: validStatuses },
+    },
+  });
+
+  return {
+    totalSales,
+    uniqueCustomers: uniqueCustomersData.length,
+    totalQuantity: totalQuantityData._sum.quantity || 0,
+    totalValue: totalValueData._sum.totalAmount || 0,
+  };
 }
 }

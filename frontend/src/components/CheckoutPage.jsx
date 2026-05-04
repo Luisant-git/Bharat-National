@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { PrimaryButton, TextInput } from "./FormControl";
-import { createOrder } from "../api/Order";
+import { createOrder, getLastOrderForUser } from "../api/Order";
 import { clearCart, getOrCreateCartId } from "../utils/CartStorage";
 import { toast } from "react-toastify";
 import upiLogo from "../assets/upi.png";
@@ -67,7 +67,11 @@ export default function CheckoutPage() {
 
     try {
       const lastOrder = await getLastOrderForUser(currentUser.id);
-
+if (!lastOrder) {
+  setViewMode("form");
+  setHasSavedAddress(false);
+  return;
+}
       setFullName(lastOrder.fullName || currentUser.name || "");
       setEmail(lastOrder.email || "");
       setPhone(lastOrder.phone || currentUser.mobilenumber || "");
@@ -129,7 +133,7 @@ export default function CheckoutPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const [viewMode, setViewMode] = useState("card");
+  const [viewMode, setViewMode] = useState("form");
   const [hasSavedAddress, setHasSavedAddress] = useState(false);
 
   const [paymentMethod, setPaymentMethod] = useState("online");
@@ -203,6 +207,7 @@ const handleSaveAddress = () => {
         address: address.trim(),
         place: place.trim(),
         pincode: pincode.trim(),
+        status: "PLACED",  
         paymentMethod,
         items: cartItems.map((item) => ({ productId: item.id ?? item.productId, quantity: item.quantity })),
       };
