@@ -1,79 +1,62 @@
 import {
   Controller,
-  All,
-  Req,
-  Res,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
   Param,
   ParseIntPipe,
-  BadRequestException,
+  Query,
 } from '@nestjs/common';
-import type { Request, Response } from 'express';
-
 import { OrderService } from './order.service';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderDto } from './dto/update-order.dto';
 
 @Controller('order')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
- 
-  @All()
-  async handleOrders(@Req() req: Request, @Res() res: Response) {
-    const method = req.method;
-
-    if (method === 'POST') {
-      const result = await this.orderService.create(req.body);
-      return res.json(result);
-    }
-
-    if (method === 'GET') {
-      const orders = await this.orderService.findAll();
-      return res.json(orders);
-    }
-
-    return res.status(405).json({ error: `Method ${method} not allowed` });
+  // ✅ Create Order
+  @Post()
+  create(@Body() createOrderDto: CreateOrderDto) {
+    return this.orderService.create(createOrderDto);
   }
 
+@Get()
+findAll(@Query('userId') userId?: string) {
+  return this.orderService.findAll(userId ? Number(userId) : undefined);
+}
 
-  @All('active')
-  async handleActive(@Req() req: Request, @Res() res: Response) {
-    const method = req.method;
-
-    if (method === 'GET') {
-      const orders = await this.orderService.findActive();
-      return res.json(orders);
-    }
-
-    return res.status(405).json({ error: `Method ${method} not allowed` });
+  // ✅ Get Active Orders
+  @Get('active')
+  findActive() {
+    return this.orderService.findActive();
   }
 
-  
-  @All(':id')
-  async handleOrderById(
+   @Get('last')
+  findLast(@Query('userId') userId: string) {
+    return this.orderService.findLastByUser(Number(userId));
+  }
+
+  // ✅ Get One Order
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.orderService.findOne(id);
+  }
+
+  // ✅ Update Order
+  @Patch(':id')
+  update(
     @Param('id', ParseIntPipe) id: number,
-    @Req() req: Request,
-    @Res() res: Response,
+    @Body() updateOrderDto: UpdateOrderDto,
   ) {
-    const method = req.method;
+    return this.orderService.update(id, updateOrderDto);
+  }
 
-    if (!id || Number.isNaN(id)) {
-      throw new BadRequestException('Invalid id');
-    }
-
-    if (method === 'GET') {
-      const order = await this.orderService.findOne(id);
-      return res.json(order);
-    }
-
-    if (method === 'PATCH') {
-      const result = await this.orderService.update(id, req.body);
-      return res.json(result);
-    }
-
-    if (method === 'DELETE') {
-      const result = await this.orderService.remove(id);
-      return res.json(result);
-    }
-
-    return res.status(405).json({ error: `Method ${method} not allowed` });
+  // ✅ Soft Delete Order
+  @Delete(':id')
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.orderService.remove(id);
   }
 }

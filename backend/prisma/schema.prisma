@@ -28,8 +28,8 @@ model User{
   state     String?
   mobilenumber    String? @unique
   pincode   String?
-  otp       String
-  otpExpiredAt  DateTime 
+  otp       String?
+  otpExpiredAt  DateTime ?
   createdAt  DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -83,7 +83,7 @@ model Order {
   id          Int          @id @default(autoincrement())
   userId        Int
   fullName    String
-  email       String
+  email       String ?
   phone       String
   address     String?
   pincode     String?

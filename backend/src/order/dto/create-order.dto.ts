@@ -1,10 +1,11 @@
 import {
   ArrayMinSize,
   IsEmail,
+  IsInt,
   IsNotEmpty,
   IsOptional,
-  IsPhoneNumber,
   IsString,
+  Min,
   MinLength,
   ValidateNested,
 } from 'class-validator';
@@ -13,7 +14,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { OrderItemInputDto } from './order-item-input.dto';
 
 export class CreateOrderDto {
-  @ApiPropertyOptional({ example: 'df1e-a92c-xx-1234' })
+  @ApiPropertyOptional({
+    example: 'cart_abc123',
+    description: 'Optional cart identifier (used if tracking cart session)',
+  })
   @IsOptional()
   @IsString()
   @Transform(({ value }) =>
@@ -21,25 +25,72 @@ export class CreateOrderDto {
   )
   cartId?: string;
 
-  @ApiProperty({ example: 'John Doe' })
+  @ApiProperty({
+    example: 1,
+    description: 'Logged-in user ID (from User table)',
+  })
+  @IsInt()
+  @Min(1)
+  userId: number;
+
+  @ApiProperty({
+    example: 'John Doe',
+    description: 'Full name of the customer placing the order',
+  })
   @IsString()
   @IsNotEmpty()
   fullName: string;
 
-  @ApiProperty({ example: 'johndoe@example.com' })
-  @IsEmail()
-  email: string;
+  @ApiPropertyOptional({ example: 'johndoe@example.com' })
+@IsOptional()
+@IsEmail()
+email?: string;
+ 
 
-  @ApiProperty({ example: '+91 9876543210' })
-  @IsPhoneNumber('IN')
+  @ApiProperty({
+    example: '9876543210',
+    description: 'Customer mobile number (10-digit Indian number)',
+  })
+  @IsString()
+  @MinLength(10)
   phone: string;
 
-  @ApiProperty({ example: 'Coimbatore, Tamil Nadu (full address/place)' })
+  @ApiPropertyOptional({
+    example: 'No.12, Anna Nagar, 3rd Street',
+    description: 'Full delivery address',
+  })
+  @IsOptional()
   @IsString()
-  @MinLength(3)
+  address?: string;
+
+  @ApiProperty({
+    example: 'Chennai',
+    description: 'City / Place for delivery',
+  })
+  @IsString()
+  @MinLength(2)
   place: string;
 
-  @ApiProperty({ type: [OrderItemInputDto] })
+  @ApiPropertyOptional({
+    example: '600001',
+    description: '6-digit postal code',
+  })
+  @IsOptional()
+  @IsString()
+  pincode?: string;
+
+  @ApiPropertyOptional({
+    example: 'online',
+    description: 'Payment method (online or cod)',
+  })
+  @IsOptional()
+  @IsString()
+  paymentMethod?: string;
+
+  @ApiProperty({
+    type: [OrderItemInputDto],
+    description: 'List of items included in the order',
+  })
   @ValidateNested({ each: true })
   @Type(() => OrderItemInputDto)
   @ArrayMinSize(1)

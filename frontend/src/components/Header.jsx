@@ -52,6 +52,7 @@ const [profileOpen, setProfileOpen] = useState(false);
     { name: "About", path: "/about" },
     { name: "IT Services", path: "/services" },
     { name: "Contact", path: "/contact" },
+      { name: "My Orders", path: "/orders" }, 
   ];
 
 
@@ -340,25 +341,28 @@ const [profileOpen, setProfileOpen] = useState(false);
     
                 {/* Mobile Icons */}
         <div className="flex md:hidden items-center justify-between gap-4">
-          {/* Mobile Profile: Login if guest, Logout if authenticated */}
-          <button
-            type="button"
-            onClick={() => {
-              if (!isLoggedIn()) {
-                navigate("/login", { state: { redirectTo: window.location.pathname } });
-              } else {
-                handleLogout();
-              }
-            }}
-            className={`flex items-center justify-center w-8 h-8 rounded-full border ${
-              isLoggedIn() 
-                ? "bg-[var(--primary)] text-white border-[var(--primary)]" 
-                : "bg-white text-gray-700 border-gray-300"
-            }`}
-          >
-            {isLoggedIn() ? <span className="text-xs font-bold">{userInitial}</span> : <User size={16} />}
-          </button>
-
+       {/* Mobile Profile: Login if guest, open drawer if authenticated */}
+<button
+  type="button"
+  onClick={() => {
+    if (!isLoggedIn()) {
+      navigate("/login", { state: { redirectTo: window.location.pathname } });
+    } else {
+      setOpenNav(true); // open mobile drawer where profile section is
+    }
+  }}
+  className={`flex items-center justify-center w-8 h-8 rounded-full border ${
+    isLoggedIn()
+      ? "bg-[var(--primary)] text-white border-[var(--primary)]"
+      : "bg-white text-gray-700 border-gray-300"
+  }`}
+>
+  {isLoggedIn() ? (
+    <span className="text-xs font-bold">{userInitial}</span>
+  ) : (
+    <User size={16} />
+  )}
+</button>
           <button
             type="button"
             onClick={() => navigate("/cart")}
@@ -438,24 +442,33 @@ const [profileOpen, setProfileOpen] = useState(false);
           </button>
 
           <div className="flex gap-10 flex-1 justify-center">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.name}
-                to={link.path}
-                onClick={closeAllMenus}
-                className="relative group transition-colors"
-                style={({ isActive }) => ({
-                  color: isActive ? "var(--primary)" : "#000",
-                  fontWeight: isActive ? 700 : 600,
-                })}
-              >
-                {link.name}
-                <span
-                  className="absolute left-0 -bottom-1 w-0 h-[2px] group-hover:w-full transition-all"
-                  style={{ backgroundColor: "var(--primary)" }}
-                />
-              </NavLink>
-            ))}
+          {navLinks.map((link) => {
+  const isOrders = link.path === "/orders";
+  return (
+    <NavLink
+      key={link.name}
+      to={link.path}
+      onClick={(e) => {
+        closeAllMenus();
+        if (isOrders && !isLoggedIn()) {
+          e.preventDefault();
+          navigate("/login", { state: { redirectTo: "/orders" } });
+        }
+      }}
+      className="relative group transition-colors"
+      style={({ isActive }) => ({
+        color: isActive ? "var(--primary)" : "#000",
+        fontWeight: isActive ? 700 : 600,
+      })}
+    >
+      {link.name}
+      <span
+        className="absolute left-0 -bottom-1 w-0 h-[2px] group-hover:w-full transition-all"
+        style={{ backgroundColor: "var(--primary)" }}
+      />
+    </NavLink>
+  );
+})}
           </div>
 
           <div className="w-40" />
@@ -568,6 +581,64 @@ const [profileOpen, setProfileOpen] = useState(false);
                   </div>
                 </div>
               )}
+
+              {/* Profile Section (mobile/tablet) */}
+<div className="mt-5 border border-[var(--grey-300)] rounded-lg p-3 bg-[var(--grey-50)]">
+  {isLoggedIn() && user ? (
+    <>
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-[var(--primary)] text-white flex items-center justify-center text-sm font-bold">
+          {userInitial}
+        </div>
+        <div className="flex flex-col">
+          <span className="text-xs text-gray-500">Signed in as</span>
+          <span className="text-sm font-semibold text-gray-900 truncate">
+            {user?.name || "User"}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-col gap-2">
+     <button
+  type="button"
+  onClick={() => {
+    closeAllMenus();
+    if (!isLoggedIn()) {
+      navigate("/login", { state: { redirectTo: "/orders" } });
+    } else {
+      navigate("/orders");
+    }
+  }}
+          className="w-full text-left text-sm px-3 py-2 rounded-md bg-white border border-[var(--grey-300)] flex items-center justify-between"
+        >
+          <span>My Orders</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            handleLogout();
+            closeAllMenus();
+          }}
+          className="w-full text-left text-sm px-3 py-2 rounded-md bg-red-50 text-red-600 border border-red-100"
+        >
+          Logout
+        </button>
+      </div>
+    </>
+  ) : (
+    <button
+      type="button"
+      onClick={() => {
+        navigate("/login", { state: { redirectTo: window.location.pathname } });
+        closeAllMenus();
+      }}
+      className="w-full text-center text-sm px-3 py-2 rounded-md bg-[var(--primary)] text-white font-semibold"
+    >
+      Login / Sign Up
+    </button>
+  )}
+</div>
 
               {/* Links */}
               <div className="mt-5 flex flex-col gap-2">

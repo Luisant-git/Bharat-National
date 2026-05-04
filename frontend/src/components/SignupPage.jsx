@@ -1,65 +1,93 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { X, UserPlus, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { X, UserPlus, ArrowRight, CheckCircle2, EyeOff, Eye } from 'lucide-react';
 import { auth } from '../api/auth';
 
 const SignupPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ name: '', mobilenumber: '' });
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: '',
+    mobilenumber: '',
+    password: '',
+  });
 
   useEffect(() => {
-  if (location.state?.mobilenumber) {
-    setFormData(prev => ({ 
-      ...prev, 
-      mobilenumber: location.state.mobilenumber 
-    }));
-  }
-}, [location]);
+    if (location.state?.mobilenumber) {
+      setFormData(prev => ({
+        ...prev,
+        mobilenumber: location.state.mobilenumber,
+      }));
+    }
+  }, [location]);
 
   const handleClose = () => navigate(location.state?.redirectTo || -1);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
     if (name === 'mobilenumber') {
       const cleaned = value.replace(/\D/g, '');
-      if (cleaned.length <= 10) setFormData(prev => ({ ...prev, [name]: cleaned }));
+      if (cleaned.length <= 10) {
+        setFormData(prev => ({ ...prev, [name]: cleaned }));
+      }
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
   const validateForm = () => {
-    if (!formData.name.trim()) { toast.error('Please enter your full name'); return false; }
-    if (!formData.mobilenumber) { toast.error('Please enter mobile number'); return false; }
-    if (formData.mobilenumber.length !== 10) { toast.error('Mobile number must be 10 digits'); return false; }
+    if (!formData.name.trim()) {
+      toast.error('Please enter your full name');
+      return false;
+    }
+    if (!formData.mobilenumber) {
+      toast.error('Please enter mobile number');
+      return false;
+    }
+    if (formData.mobilenumber.length !== 10) {
+      toast.error('Mobile number must be 10 digits');
+      return false;
+    }
+    if (!formData.password) {
+      toast.error('Please enter a password');
+      return false;
+    }
+    if (formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return false;
+    }
     return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
+
     setLoading(true);
     try {
-     const submitData = {
-  name: formData.name.trim(),
-  mobilenumber: formData.mobilenumber,
-};
-      
+      const submitData = {
+        name: formData.name.trim(),
+        mobilenumber: formData.mobilenumber,
+        password: formData.password,
+      };
+
       await auth.signup(submitData);
-      toast.success('Account created! Please verify with OTP.');
+
+      toast.success('Account created! You can now log in.');
       navigate('/login', {
         state: {
           mobilenumber: formData.mobilenumber,
-          name: formData.name.trim(),
           redirectTo: location.state?.redirectTo || '/',
         },
       });
     } catch (error) {
-      if (error.message?.includes('already exists')) {
-        toast.info('Account exists! Please login.');
+      if (error.message?.toLowerCase().includes('already exists')) {
+        toast.info('Account already exists. Please log in.');
         navigate('/login', {
           state: {
             mobilenumber: formData.mobilenumber,
@@ -165,16 +193,43 @@ const SignupPage = () => {
                   </div>
                 )}
               </div>
-              <p className="mt-2 text-xs text-gray-400 flex items-center gap-1">
-                <span className="w-1 h-1 rounded-full bg-gray-400"></span>
-                We'll send an OTP to verify this number
-              </p>
+            </div>
+
+            {/* Password Field */}
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2.5">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[var(--primary,#00897B)] focus:bg-white focus:ring-1 focus:ring-[var(--primary,#00897B)]/30 transition-all text-base font-medium placeholder:text-gray-400 pr-11"
+                  placeholder="At least 6 characters"
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(prev => !prev)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading || !formData.name.trim() || formData.mobilenumber.length !== 10}
+              disabled={
+                loading ||
+                !formData.name.trim() ||
+                formData.mobilenumber.length !== 10 ||
+                !formData.password
+              }
               className="group relative w-full flex items-center justify-center gap-2 text-white font-semibold py-3.5 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden mt-6"
               style={{ 
                 background: 'linear-gradient(135deg, var(--primary, #00897B), #00695C)',
@@ -210,7 +265,9 @@ const SignupPage = () => {
             <p className="text-sm text-gray-600">
               Already have an account?{' '}
               <button
-                onClick={() => navigate('/login', { state: { redirectTo: location.state?.redirectTo } })}
+                onClick={() =>
+                  navigate('/login', { state: { redirectTo: location.state?.redirectTo } })
+                }
                 className="font-bold hover:underline"
                 style={{ color: 'var(--primary, #00897B)' }}
               >

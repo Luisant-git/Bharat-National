@@ -18,6 +18,8 @@ import CartDrawer from "./components/CartDrawer";
 import { useEffect, useState } from "react";
 import LoginPage from "./components/LoginPage";
 import SignupPage from "./components/SignupPage";
+import MyOrdersPage from "./pages/MyOrdersPage";
+import OrderDetailsPage from "./pages/OrderDetailsPage";
 
 function App() {
   const [cartOpen, setCartOpen] = useState(false);
@@ -60,6 +62,8 @@ function App() {
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
+              <Route path="/orders" element={<MyOrdersPage />} />
+              <Route path="/orders/:id" element={<OrderDetailsPage />} />
             </Routes>
           </main>
           <Footer />

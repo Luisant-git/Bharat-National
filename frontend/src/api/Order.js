@@ -1,8 +1,10 @@
-// src/api/Order.js
+
 const API_URL = import.meta.env.VITE_API_URL;
 
+// Common response handler
 async function handleResponse(response) {
   let data;
+
   try {
     data = await response.json();
   } catch {
@@ -17,7 +19,10 @@ async function handleResponse(response) {
   return data;
 }
 
-
+/**
+ * ✅ Create Order
+ * POST /order
+ */
 export async function createOrder(payload) {
   const res = await fetch(`${API_URL}/order`, {
     method: "POST",
@@ -31,9 +36,8 @@ export async function createOrder(payload) {
 }
 
 /**
- * Get all orders
+ * ✅ Get All Orders (Admin)
  * GET /order
- * (Good for admin list page)
  */
 export async function getOrders() {
   const res = await fetch(`${API_URL}/order`, {
@@ -44,7 +48,31 @@ export async function getOrders() {
 }
 
 /**
- * Get single order by id
+ * ✅ Get Orders by User
+ * GET /order?userId=1
+ */
+export async function getOrdersByUser(userId) {
+  const res = await fetch(`${API_URL}/order?userId=${userId}`, {
+    method: "GET",
+  });
+
+  return handleResponse(res);
+}
+
+/**
+ * ✅ Get Active Orders
+ * GET /order/active
+ */
+export async function getActiveOrders() {
+  const res = await fetch(`${API_URL}/order/active`, {
+    method: "GET",
+  });
+
+  return handleResponse(res);
+}
+
+/**
+ * ✅ Get Single Order
  * GET /order/:id
  */
 export async function getOrderById(id) {
@@ -55,7 +83,10 @@ export async function getOrderById(id) {
   return handleResponse(res);
 }
 
-
+/**
+ * ✅ Update Order
+ * PATCH /order/:id
+ */
 export async function updateOrder(id, updates) {
   const res = await fetch(`${API_URL}/order/${id}`, {
     method: "PATCH",
@@ -67,3 +98,23 @@ export async function updateOrder(id, updates) {
 
   return handleResponse(res);
 }
+
+/**
+ * ✅ Delete (Soft Delete)
+ * DELETE /order/:id
+ */
+export async function deleteOrder(id) {
+  const res = await fetch(`${API_URL}/order/${id}`, {
+    method: "DELETE",
+  });
+
+  return handleResponse(res);
+}
+
+export const getLastOrderForUser = async (userId) => {
+  const res = await fetch(`${API_URL}/order/last?userId=${userId}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return handleResponse(res);
+};

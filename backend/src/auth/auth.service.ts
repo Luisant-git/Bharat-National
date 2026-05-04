@@ -4,98 +4,40 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+import { PrismaClient } from '@prisma/client';
 
 import { SignupDto } from './dto/signup.dto';
-import { SendOtpDto } from './dto/send-otp.dto';
-import { VerifyOtpDto } from './dto/verify-otp.dto';
-import { PrismaClient } from '@prisma/client';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
-
   private prisma = new PrismaClient();
-  constructor(
-  
-    private jwtService: JwtService,
-  ) {}
+
+  constructor(private jwtService: JwtService) {}
 
   // ✅ SIGNUP
   async signup(data: SignupDto) {
-    const existing = await this.prisma.user.findUnique({
+    const existingUser = await this.prisma.user.findUnique({
       where: { mobilenumber: data.mobilenumber },
     });
 
-    if (existing) {
+    if (existingUser) {
       throw new BadRequestException('User already exists');
     }
 
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
     const user = await this.prisma.user.create({
-  data: {
-    name: data.name,
-    mobilenumber: data.mobilenumber,
-    otp: '123456', // required
-    otpExpiredAt: new Date(),
-  },
-});
-
-    return {
-      message: 'Signup successful',
-      user,
-    };
-  }
-
-  // ✅ SEND OTP (HARDCODED)
-  async sendOtp(data: SendOtpDto) {
-    const user = await this.prisma.user.findUnique({
-      where: { mobilenumber: data.mobilenumber },
-    });
-
-    if (!user) {
-      throw new BadRequestException('User not found. Please signup');
-    }
-
-    const otp = '123456'; 
-
-    await this.prisma.user.update({
-      where: { mobilenumber: data.mobilenumber },
       data: {
-        otp,
-        otpExpiredAt: new Date(Date.now() + 5 * 60 * 1000),
+        name: data.name,
+        mobilenumber: data.mobilenumber,
+        password: hashedPassword,
       },
     });
 
-    console.log('OTP (use this):', otp);
-
-    return { message: 'OTP sent (use 123456)' };
-  }
-
-  // ✅ VERIFY OTP (LOGIN)
-  async verifyOtp(data: VerifyOtpDto) {
-    const user = await this.prisma.user.findUnique({
-      where: { mobilenumber: data.mobilenumber },
-    });
-
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    }
-
-    if (data.otp !== '123456') {
-      throw new UnauthorizedException('Invalid OTP');
-    }
-
-    if (!user.otpExpiredAt || user.otpExpiredAt < new Date()) {
-      throw new UnauthorizedException('OTP expired');
-    }
-
-    const payload = {
-      sub: user.id,
-      mobilenumber: user.mobilenumber,
-    };
-
-    const token = this.jwtService.sign(payload);
-
     return {
-      access_token: token,
+      message: 'Signup successful',
       user: {
         id: user.id,
         name: user.name,
@@ -103,4 +45,45 @@ export class AuthService {
       },
     };
   }
+
+  // ✅ LOGIN
+ async login(data: LoginDto) {
+  const user = await this.prisma.user.findUnique({
+    where: { mobilenumber: data.mobilenumber },
+  });
+
+  if (!user) {
+    throw new UnauthorizedException('User not found');
+  }
+
+  // ✅ FIX: handle nullable password
+  if (!user.password) {
+    throw new UnauthorizedException('Password not set for this user');
+  }
+
+  const isPasswordValid = await bcrypt.compare(
+    data.password,
+    user.password, // now guaranteed string
+  );
+
+  if (!isPasswordValid) {
+    throw new UnauthorizedException('Invalid password');
+  }
+
+  const payload = {
+    sub: user.id,
+    mobilenumber: user.mobilenumber,
+  };
+
+  const token = this.jwtService.sign(payload);
+
+  return {
+    access_token: token,
+    user: {
+      id: user.id,
+      name: user.name,
+      mobilenumber: user.mobilenumber,
+    },
+  };
+}
 }

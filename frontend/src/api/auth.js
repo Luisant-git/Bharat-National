@@ -5,63 +5,57 @@ const handleResponse = async (response) => {
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.message || 'Something went wrong');
+    throw new Error(data.message || "Something went wrong");
   }
 
   return data;
 };
 
 export const auth = {
-
   // ✅ SIGNUP
   async signup(userData) {
     const response = await fetch(`${VITE_API_URL}/auth/signup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
     });
 
     return handleResponse(response);
   },
 
-  // ✅ SEND OTP (CALL BACKEND)
-  async sendOTP(mobilenumber) {
-    const response = await fetch(`${VITE_API_URL}/auth/send-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mobilenumber }),
+  // ✅ LOGIN (NEW)
+  async login(mobilenumber, password) {
+    const response = await fetch(`${VITE_API_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mobilenumber, password }),
     });
 
-    return handleResponse(response);
-  },
+    const data = await handleResponse(response);
 
-  // ✅ VERIFY OTP (CALL BACKEND)
-  async verifyOTP(mobilenumber, otp) {
-    const response = await fetch(`${VITE_API_URL}/auth/verify-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mobilenumber, otp }),
-    });
+    // ✅ store token & user
+    localStorage.setItem("authToken", data.access_token);
+    localStorage.setItem("user", JSON.stringify(data.user));
 
-    return handleResponse(response);
+    return data;
   },
 
   // ✅ LOGOUT
   logout() {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    localStorage.removeItem('pendingCartItem');
-    window.dispatchEvent(new Event('auth:logout'));
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
+    localStorage.removeItem("pendingCartItem");
+    window.dispatchEvent(new Event("auth:logout"));
   },
 
   // ✅ CHECK AUTH
   isAuthenticated() {
-    return !!localStorage.getItem('authToken');
+    return !!localStorage.getItem("authToken");
   },
 
   // ✅ GET USER
   getCurrentUser() {
-    const user = localStorage.getItem('user');
+    const user = localStorage.getItem("user");
     return user ? JSON.parse(user) : null;
-  }
+  },
 };
