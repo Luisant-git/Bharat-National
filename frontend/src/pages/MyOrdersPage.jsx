@@ -33,7 +33,7 @@ const formatDate = (iso) => {
 const formatCurrency = (val) =>
   `₹${Number(val || 0).toLocaleString("en-IN")}`;
 
-// Dynamic Status Configuration (matching admin panel)
+// Dynamic Status Configuration
 const statusConfig = {
   PLACED: {
     label: "Placed",
@@ -71,7 +71,6 @@ const getStatusConfig = (status) => {
   return statusConfig[status] || statusConfig.PLACED;
 };
 
-// Image helper
 const getProductImage = (order) => {
   if (order.orderItem && order.orderItem.length > 0) {
     const firstItem = order.orderItem[0];

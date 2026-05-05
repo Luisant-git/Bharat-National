@@ -12,7 +12,7 @@ export class OrderService {
   private prisma = new PrismaClient();
 
   async create(createOrderDto: CreateOrderDto) {
-    const { userId, items } = createOrderDto;
+      const { userId, items, state,  cancelRemarks } = createOrderDto;
 
     if (!items || items.length === 0) {
       throw new BadRequestException('Items are required');
@@ -66,8 +66,10 @@ export class OrderService {
         address: createOrderDto.address,
         place: createOrderDto.place,
         pincode: createOrderDto.pincode,
+         state: state || createOrderDto.state,
         paymentMethod: createOrderDto.paymentMethod,
    status: 'PLACED',
+      cancelRemarks:  cancelRemarks || 'Order placed successfully', 
         totalAmount,
         orderItem: {
           create: orderItemData,
@@ -118,26 +120,48 @@ export class OrderService {
     return order;
   }
 
-  async update(id: number, updateOrderDto: UpdateOrderDto) {
-    await this.findOne(id);
+// src/order/order.service.ts
 
-    const data: any = { ...updateOrderDto };
-    delete data.items;
-    delete data.totalAmount;
+async update(id: number, updateOrderDto: UpdateOrderDto) {
+  await this.findOne(id);
 
-    const order = await this.prisma.order.update({
-      where: { id },
-      data,
-      include: {
-        orderItem: { include: { product: true } },
-      },
-    });
+  const data: any = { ...updateOrderDto };
+  delete data.items;
+  delete data.totalAmount;
 
-    return {
-      message: 'Order updated successfully',
-      order,
-    };
+  // If status is being changed to CANCELLED, require cancelRemarks
+  if (updateOrderDto.status === 'CANCELLED') {
+    if (!updateOrderDto.cancelRemarks) {
+      throw new BadRequestException('Cancellation remarks are required when cancelling an order');
+    }
+    data.cancelRemarks = updateOrderDto.cancelRemarks;
+  } else if (updateOrderDto.status && updateOrderDto.status !== 'CANCELLED') {
+    // For non-cancellation status updates, you might want to add status remarks
+    // But don't use cancelRemarks for these
+    if (updateOrderDto.cancelRemarks) {
+      // Optional: You could store this in a different field like 'statusRemarks'
+      // For now, we'll ignore it for non-cancellation statuses
+    }
   }
+
+  // Remove cancelRemarks from data if it's not a cancellation
+  if (updateOrderDto.status !== 'CANCELLED') {
+    delete data.cancelRemarks;
+  }
+
+  const order = await this.prisma.order.update({
+    where: { id },
+    data,
+    include: {
+      orderItem: { include: { product: true } },
+    },
+  });
+
+  return {
+    message: 'Order updated successfully',
+    order,
+  };
+}
 
   async remove(id: number) {
     const existing = await this.findOne(id);

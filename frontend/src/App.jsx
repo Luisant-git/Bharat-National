@@ -20,6 +20,7 @@ import LoginPage from "./components/LoginPage";
 import SignupPage from "./components/SignupPage";
 import MyOrdersPage from "./pages/MyOrdersPage";
 import OrderDetailsPage from "./pages/OrderDetailsPage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 function App() {
   const [cartOpen, setCartOpen] = useState(false);
@@ -64,6 +65,7 @@ function App() {
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/orders" element={<MyOrdersPage />} />
               <Route path="/orders/:id" element={<OrderDetailsPage />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </main>
           <Footer />

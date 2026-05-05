@@ -1,13 +1,15 @@
-import {
-  ArrayMinSize,
-  IsEmail,
-  IsInt,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  Min,
-  MinLength,
-  ValidateNested,
+// src/order/dto/create-order.dto.ts
+import { PartialType, OmitType } from '@nestjs/mapped-types';
+import { 
+  ArrayMinSize, 
+  IsEmail, 
+  IsInt, 
+  IsNotEmpty, 
+  IsOptional, 
+  IsString, 
+  Min, 
+  MinLength, 
+  ValidateNested 
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -42,10 +44,9 @@ export class CreateOrderDto {
   fullName: string;
 
   @ApiPropertyOptional({ example: 'johndoe@example.com' })
-@IsOptional()
-@IsEmail()
-email?: string;
- 
+  @IsOptional()
+  @IsEmail()
+  email?: string;
 
   @ApiProperty({
     example: '9876543210',
@@ -72,6 +73,14 @@ email?: string;
   place: string;
 
   @ApiPropertyOptional({
+    example: 'Tamil Nadu',
+    description: 'State for delivery',
+  })
+  @IsOptional()
+  @IsString()
+  state?: string;  // ✅ Added state field
+
+  @ApiPropertyOptional({
     example: '600001',
     description: '6-digit postal code',
   })
@@ -96,10 +105,20 @@ email?: string;
   @ArrayMinSize(1)
   items: OrderItemInputDto[];
 
-    @ApiPropertyOptional({
-    example: 'PENDING',
+  @ApiPropertyOptional({
+    example: 'PLACED',
+    description: 'Order status',
+    enum: ['PLACED', 'ACCEPTED', 'SHIPPED', 'DELIVERED', 'CANCELLED']
   })
-
+  @IsOptional()
   @IsString()
-  status: string;
+  status?: string;  // Made optional, defaults to 'PLACED' in service
+
+  @ApiPropertyOptional({
+    example: 'Order placed successfully',
+    description: 'Remarks about the order status',
+  })
+  @IsOptional()
+  @IsString()
+   cancelRemarks?: string;  // ✅ Added status remarks field
 }
