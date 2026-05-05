@@ -13,9 +13,12 @@ import {
   IndianRupee,
   AlertTriangle,
   Building2,
+  FileText,
 } from "lucide-react";
 import { getOrderById } from "../api/Order";
 import { toast } from "react-toastify";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const formatCurrency = (value) =>
   `₹${Number(value || 0).toLocaleString("en-IN")}`;
@@ -65,6 +68,201 @@ const statusConfig = {
 
 const getStatusConfig = (status) => {
   return statusConfig[status] || statusConfig.PLACED;
+};
+
+// Generate Invoice PDF
+const generateInvoicePDF = async (order) => {
+  try {
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    doc.setFont("helvetica");
+
+    // ================= HELPERS =================
+    const toNumber = (val) => {
+      if (!val) return 0;
+      return Number(String(val).replace(/[^0-9.]/g, ""));
+    };
+
+    const formatMoney = (val) => {
+      const num = toNumber(val);
+      return `Rs. ${num.toLocaleString("en-IN")}`;
+    };
+
+    // ================= HEADER =================
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("BHARAT NATIONAL COMPUTERS", 20, 25);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("INVOICE", 150, 25);
+    doc.text(`#INV-${order.id}`, 150, 32);
+    doc.text(`Order ID: ORD-${order.id}`, 150, 38);
+
+    doc.text(
+      `Date: ${new Date(order.createdAt).toLocaleDateString("en-IN")}`,
+      150,
+      44
+    );
+
+    // ================= COMPANY INFO =================
+    doc.setFontSize(10);
+    doc.text("Bharat National Computers", 20, 55);
+    doc.text("Dno - 333- F2 - Geetha Building", 20, 61);
+    doc.text("Nehru St, Ram Nagar, Coimbatore", 20, 67);
+    doc.text("Tamil Nadu - 641009", 20, 73);
+    doc.text("Phone: 9789345333 / 8903037883", 20, 79);
+    doc.text("Email: bncbalajicbe@gmail.com", 20, 85);
+    doc.text("GST: 33ABCDE1234F1Z5", 20, 91);
+
+    doc.line(20, 96, 190, 96);
+
+    // ================= BILL TO =================
+    doc.setFont("helvetica", "bold");
+    doc.text("BILL TO:", 20, 106);
+
+    doc.setFont("helvetica", "normal");
+    doc.text(order.fullName || "Customer", 20, 114);
+    doc.text(order.address || "No address provided", 20, 120);
+    doc.text(
+      `${order.place || ""}${order.state ? ", " + order.state : ""}`,
+      20,
+      126
+    );
+    doc.text(order.pincode ? `Pincode: ${order.pincode}` : "", 20, 132);
+    doc.text(`Phone: ${order.phone || "N/A"}`, 20, 138);
+    doc.text(`Email: ${order.email || "N/A"}`, 20, 144);
+
+    // ================= ORDER DETAILS =================
+    doc.setFont("helvetica", "bold");
+    doc.text("ORDER DETAILS:", 20, 156);
+
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      `Payment Method: ${order.paymentMethod?.toUpperCase() || "N/A"}`,
+      20,
+      164
+    );
+    doc.text(`Order Status: ${order.status}`, 20, 170);
+
+    // ================= TABLE =================
+    const tableColumn = ["S.No", "Product Name", "Qty", "Unit Price", "Total"];
+    const tableRows = [];
+
+    let subtotal = 0;
+
+    order.orderItem?.forEach((item, index) => {
+      const qty = toNumber(item.quantity);
+      const unitPrice = toNumber(item.unitPrice);
+      const total = qty * unitPrice;
+
+      subtotal += total;
+
+      tableRows.push([
+        index + 1,
+        item.productName || "Product",
+        qty,
+        formatMoney(unitPrice),
+        formatMoney(total),
+      ]);
+    });
+
+    const startY = 178;
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY,
+      theme: "grid",
+      headStyles: {
+        fontSize: 9,
+        halign: "center",
+        fontStyle: "bold",
+      },
+      bodyStyles: {
+        fontSize: 9,
+        halign: "center",
+      },
+      columnStyles: {
+        0: { cellWidth: 15 },
+        1: { cellWidth: 70, halign: "left" },
+        2: { cellWidth: 20 },
+        3: { cellWidth: 35, halign: "right" },
+        4: { cellWidth: 35, halign: "right" },
+      },
+      margin: { left: 20, right: 20 },
+    });
+
+    // ================= TOTALS =================
+    const finalY = doc.lastAutoTable.finalY + 10;
+
+    const gst = Math.round(subtotal * 0.18);
+    const grandTotal = subtotal + gst;
+
+    doc.setFontSize(10);
+
+    doc.setFont("helvetica", "normal");
+
+    doc.text("Subtotal:", 140, finalY);
+    doc.text(formatMoney(subtotal), 180, finalY, { align: "right" });
+
+    doc.text("GST (18%):", 140, finalY + 7);
+    doc.text(formatMoney(gst), 180, finalY + 7, { align: "right" });
+
+    doc.line(130, finalY + 12, 190, finalY + 12);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("GRAND TOTAL:", 140, finalY + 20);
+    doc.text(formatMoney(grandTotal), 180, finalY + 20, {
+      align: "right",
+    });
+
+    // ================= PAYMENT STATUS =================
+    doc.setFont("helvetica", "normal");
+    doc.text("Payment Status:", 20, finalY + 20);
+    doc.text(
+      order.paymentMethod === "cod" ? "Pending (COD)" : "Paid",
+      60,
+      finalY + 20
+    );
+
+    // ================= FOOTER =================
+    const footerY = finalY + 45;
+
+    doc.setFontSize(8);
+    doc.text(
+      "Thank you for choosing Bharat National Computers!",
+      105,
+      footerY,
+      { align: "center" }
+    );
+
+    doc.text("Contact: 9789345333 / 8903037883", 105, footerY + 6, {
+      align: "center",
+    });
+
+    doc.text("Email: bncbalajicbe@gmail.com", 105, footerY + 12, {
+      align: "center",
+    });
+
+    doc.text(
+      `Generated on: ${new Date().toLocaleString("en-IN")}`,
+      105,
+      footerY + 18,
+      { align: "center" }
+    );
+
+    doc.save(`Invoice_ORD-${order.id}.pdf`);
+
+    toast.success("Invoice downloaded successfully!");
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to generate invoice");
+  }
 };
 
 export default function OrderDetailsPage() {
@@ -159,6 +357,16 @@ export default function OrderDetailsPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Invoice Button - Show only for SHIPPED and DELIVERED orders */}
+            {(order.status === "SHIPPED" || order.status === "DELIVERED") && (
+              <button
+                onClick={() => generateInvoicePDF(order)}
+                className="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-600 hover:bg-indigo-600 hover:text-white flex items-center justify-center transition"
+                title="Download Invoice"
+              >
+                <FileText className="w-5 h-5" />
+              </button>
+            )}
             <button
               type="button"
               onClick={() => navigate(-1)}

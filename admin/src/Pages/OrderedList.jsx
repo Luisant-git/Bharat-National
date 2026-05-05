@@ -6,6 +6,7 @@ import {
   Package,
   Users,
   Layers,
+    FileText,
   Receipt,
   ImageIcon,
   CheckCircle2,
@@ -23,6 +24,8 @@ import html2canvas from "html2canvas";
 
 import Pagination from "../CommonComponent/Pagination";
 import PageHeader from "../CommonComponent/PageHeader";
+import jsPDF from "jspdf";  
+import autoTable from "jspdf-autotable"; 
 import { getOrders, getOrderStatusStats, getSalesStats, updateOrder } from "../api/order";
 
 // Updated status list
@@ -73,6 +76,202 @@ const statusIconMap = {
   SHIPPED: Truck,
   DELIVERED: CheckCircle2,
   CANCELLED: AlertTriangle,
+};
+
+
+// Generate Invoice PDF
+const generateInvoicePDF = async (order) => {
+  try {
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    doc.setFont("helvetica");
+
+    // ================= HELPERS =================
+    const toNumber = (val) => {
+      if (!val) return 0;
+      return Number(String(val).replace(/[^0-9.]/g, ""));
+    };
+
+    const formatMoney = (val) => {
+      const num = toNumber(val);
+      return `Rs. ${num.toLocaleString("en-IN")}`;
+    };
+
+    // ================= HEADER =================
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("BHARAT NATIONAL COMPUTERS", 20, 25);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("INVOICE", 150, 25);
+    doc.text(`#INV-${order.id}`, 150, 32);
+    doc.text(`Order ID: ORD-${order.id}`, 150, 38);
+
+    doc.text(
+      `Date: ${new Date(order.createdAt).toLocaleDateString("en-IN")}`,
+      150,
+      44
+    );
+
+    // ================= COMPANY INFO =================
+    doc.setFontSize(10);
+    doc.text("Bharat National Computers", 20, 55);
+    doc.text("Dno - 333- F2 - Geetha Building", 20, 61);
+    doc.text("Nehru St, Ram Nagar, Coimbatore", 20, 67);
+    doc.text("Tamil Nadu - 641009", 20, 73);
+    doc.text("Phone: 9789345333 / 8903037883", 20, 79);
+    doc.text("Email: bncbalajicbe@gmail.com", 20, 85);
+    doc.text("GST: 33ABCDE1234F1Z5", 20, 91);
+
+    doc.line(20, 96, 190, 96);
+
+    // ================= BILL TO =================
+    doc.setFont("helvetica", "bold");
+    doc.text("BILL TO:", 20, 106);
+
+    doc.setFont("helvetica", "normal");
+    doc.text(order.fullName || "Customer", 20, 114);
+    doc.text(order.address || "No address provided", 20, 120);
+    doc.text(
+      `${order.place || ""}${order.state ? ", " + order.state : ""}`,
+      20,
+      126
+    );
+    doc.text(order.pincode ? `Pincode: ${order.pincode}` : "", 20, 132);
+    doc.text(`Phone: ${order.phone || "N/A"}`, 20, 138);
+    doc.text(`Email: ${order.email || "N/A"}`, 20, 144);
+
+    // ================= ORDER DETAILS =================
+    doc.setFont("helvetica", "bold");
+    doc.text("ORDER DETAILS:", 20, 156);
+
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      `Payment Method: ${order.paymentMethod?.toUpperCase() || "N/A"}`,
+      20,
+      164
+    );
+    doc.text(`Order Status: ${order.status}`, 20, 170);
+
+    // ================= TABLE =================
+    const tableColumn = ["S.No", "Product Name", "Qty", "Unit Price", "Total"];
+    const tableRows = [];
+
+    let subtotal = 0;
+
+    order.orderItem?.forEach((item, index) => {
+      const qty = toNumber(item.quantity);
+      const unitPrice = toNumber(item.unitPrice);
+      const total = qty * unitPrice;
+
+      subtotal += total;
+
+      tableRows.push([
+        index + 1,
+        item.productName || "Product",
+        qty,
+        formatMoney(unitPrice),
+        formatMoney(total),
+      ]);
+    });
+
+    const startY = 178;
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY,
+      theme: "grid",
+      headStyles: {
+        fontSize: 9,
+        halign: "center",
+        fontStyle: "bold",
+      },
+      bodyStyles: {
+        fontSize: 9,
+        halign: "center",
+      },
+      columnStyles: {
+        0: { cellWidth: 15 },
+        1: { cellWidth: 70, halign: "left" },
+        2: { cellWidth: 20 },
+        3: { cellWidth: 35, halign: "right" },
+        4: { cellWidth: 35, halign: "right" },
+      },
+      margin: { left: 20, right: 20 },
+    });
+
+    // ================= TOTALS =================
+    const finalY = doc.lastAutoTable.finalY + 10;
+
+    const gst = Math.round(subtotal * 0.18);
+    const grandTotal = subtotal + gst;
+
+    doc.setFontSize(10);
+
+    doc.setFont("helvetica", "normal");
+
+    doc.text("Subtotal:", 140, finalY);
+    doc.text(formatMoney(subtotal), 180, finalY, { align: "right" });
+
+    doc.text("GST (18%):", 140, finalY + 7);
+    doc.text(formatMoney(gst), 180, finalY + 7, { align: "right" });
+
+    doc.line(130, finalY + 12, 190, finalY + 12);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("GRAND TOTAL:", 140, finalY + 20);
+    doc.text(formatMoney(grandTotal), 180, finalY + 20, {
+      align: "right",
+    });
+
+    // ================= PAYMENT STATUS =================
+    doc.setFont("helvetica", "normal");
+    doc.text("Payment Status:", 20, finalY + 20);
+    doc.text(
+      order.paymentMethod === "cod" ? "Pending (COD)" : "Paid",
+      60,
+      finalY + 20
+    );
+
+    // ================= FOOTER =================
+    const footerY = finalY + 45;
+
+    doc.setFontSize(8);
+    doc.text(
+      "Thank you for choosing Bharat National Computers!",
+      105,
+      footerY,
+      { align: "center" }
+    );
+
+    doc.text("Contact: 9789345333 / 8903037883", 105, footerY + 6, {
+      align: "center",
+    });
+
+    doc.text("Email: bncbalajicbe@gmail.com", 105, footerY + 12, {
+      align: "center",
+    });
+
+    doc.text(
+      `Generated on: ${new Date().toLocaleString("en-IN")}`,
+      105,
+      footerY + 18,
+      { align: "center" }
+    );
+
+    doc.save(`Invoice_ORD-${order.id}.pdf`);
+
+    toast.success("Invoice downloaded successfully!");
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to generate invoice");
+  }
 };
 
 const getStatusConfig = (status) => {
@@ -475,16 +674,17 @@ const OrderList = () => {
   };
 
   const openEditStatus = (order) => {
-    if (order.status === "CANCELLED" || order.status === "DELIVERED") {
-      toast.warning("Cannot edit cancelled or delivered orders");
-      return;
-    }
-    setEditStatusOrder(order);
-    setSelectedNewStatus(order.status || "PLACED");
-    setCancelRemarks(order.cancelRemarks || "");
-    setIsCancelling(order.status === "CANCELLED");
-    setEditStatusOpen(true);
-  };
+  // Only prevent editing if status is CANCELLED
+  if (order.status === "CANCELLED") {
+    toast.warning("Cannot edit cancelled orders");
+    return;
+  }
+  setEditStatusOrder(order);
+  setSelectedNewStatus(order.status || "PLACED");
+  setCancelRemarks(order.cancelRemarks || "");
+  setIsCancelling(order.status === "CANCELLED");
+  setEditStatusOpen(true);
+};
 
   return (
     <div className="min-h-screen bg-slate-50 px-3 sm:px-4 py-4 sm:py-6">
@@ -679,7 +879,7 @@ const OrderList = () => {
                   <th className="px-3 sm:px-4 py-2 sm:py-3 font-semibold">Total</th>
                   <th className="px-3 sm:px-4 py-2 sm:py-3 font-semibold">Status</th>
                   <th className="px-3 sm:px-4 py-2 sm:py-3 font-semibold hidden md:table-cell">Payment</th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3 font-semibold hidden lg:table-cell">State</th>
+                 
                   <th className="px-3 sm:px-4 py-2 sm:py-3 font-semibold hidden lg:table-cell">Date</th>
                   <th className="px-3 sm:px-4 py-2 sm:py-3 font-semibold text-right">Actions</th>
                 </tr>
@@ -728,46 +928,51 @@ const OrderList = () => {
                           {o.paymentMethod || "-"}
                         </td>
                
-<td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap hidden lg:table-cell text-xs">
-  {o.state || "-"}
-</td>
+
                         <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap hidden lg:table-cell text-xs">
                           {formatDateTime(o.createdAt)}
                         </td>
                         <td className="px-3 sm:px-4 py-2 sm:py-3">
-                          <div className="flex justify-end gap-1 sm:gap-2">
-                            <button
-                              onClick={() => openViewModal(o)}
-                              className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white flex items-center justify-center transition"
-                              title="View"
-                            >
-                              <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            </button>
-                            {(o.status !== "CANCELLED" && o.status !== "DELIVERED") ? (
-                              <button
-                                onClick={() => openEditStatus(o)}
-                                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-500 hover:text-white flex items-center justify-center transition"
-                                title="Edit Status"
-                              >
-                                <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                              </button>
-                            ) : (
-                              <button
-                                disabled
-                                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed flex items-center justify-center"
-                                title="Cannot edit cancelled or delivered orders"
-                              >
-                                <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                              </button>
-                            )}
-                            <button
-                              onClick={() => handleSingleOrderDownload(o)}
-                              className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white flex items-center justify-center transition"
-                              title="Download Excel"
-                            >
-                              <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            </button>
-                          </div>
+  <div className="flex justify-end gap-1 sm:gap-2">
+  {/* View Button */}
+  <button
+    onClick={() => openViewModal(o)}
+    className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white flex items-center justify-center transition"
+    title="View Order"
+  >
+    <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+  </button>
+  
+  {/* Edit Status Button - Only disabled for CANCELLED orders */}
+  {o.status !== "CANCELLED" ? (
+    <button
+      onClick={() => openEditStatus(o)}
+      className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-500 hover:text-white flex items-center justify-center transition"
+      title="Edit Status"
+    >
+      <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+    </button>
+  ) : (
+    <button
+      disabled
+      className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed flex items-center justify-center"
+      title="Cannot edit cancelled orders"
+    >
+      <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+    </button>
+  )}
+  
+  {/* Invoice Button - Show only for SHIPPED and DELIVERED orders */}
+  {(o.status === "SHIPPED" || o.status === "DELIVERED") && (
+    <button
+      onClick={() => generateInvoicePDF(o)}
+      className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-indigo-100 text-indigo-600 hover:bg-indigo-600 hover:text-white flex items-center justify-center transition"
+      title="Download Invoice"
+    >
+      <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+    </button>
+  )}
+</div>
                         </td>
                        </tr>
                     );
