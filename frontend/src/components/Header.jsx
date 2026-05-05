@@ -434,12 +434,15 @@ const [profileOpen, setProfileOpen] = useState(false);
         {/* Desktop links */}
         <div className="hidden md:flex items-center justify-between relative">
           <button
-            type="button"
-            onClick={toggleCategoryList}
-            className="flex items-center gap-2 cursor-pointer text-black hover:text-[var(--primary)] transition-colors"
-          >
-            <Menu size={18} /> Shop By Categories
-          </button>
+  type="button"
+  onClick={toggleCategoryList}
+  className="flex items-center gap-2 cursor-pointer 
+             bg-[var(--primary)] text-white 
+             hover:opacity-90 transition-opacity
+             rounded-lg px-3 py-2"
+>
+  <Menu size={18} /> Shop By Categories
+</button>
 
           <div className="flex gap-10 flex-1 justify-center">
           {navLinks.map((link) => {
@@ -542,19 +545,18 @@ const [profileOpen, setProfileOpen] = useState(false);
             {/* Drawer Body */}
             <div className="p-4">
               {/* Categories */}
-              <button
-                type="button"
-                onClick={toggleCategoryList}
-                className="w-full flex items-center justify-between px-3 py-3 rounded-lg border border-[var(--grey-300)] text-black"
-              >
-                <span className="flex items-center gap-2">
-                  <Menu size={18} /> Shop By Categories
-                </span>
-                <span className="text-xs text-[var(--grey-600)]">
-                  {openCategoryList ? "Hide" : "Show"}
-                </span>
-              </button>
-
+             <button
+  type="button"
+  onClick={toggleCategoryList}
+  className="w-full flex items-center justify-between px-3 py-3 
+             bg-[var(--primary)] text-white rounded-lg
+             hover:opacity-90 transition-opacity"
+>
+  <span className="flex items-center gap-2">
+    <Menu size={18} /> Shop By Categories
+  </span>
+  <span className="text-xs">Show</span>
+</button>
               {openCategoryList && (
                 <div className="mt-3 rounded-lg border border-[var(--grey-300)] overflow-hidden">
                   <div className="max-h-64 overflow-y-auto">
