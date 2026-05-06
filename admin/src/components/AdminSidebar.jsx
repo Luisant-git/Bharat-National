@@ -19,7 +19,7 @@ import {
 import { NavLink, useLocation } from "react-router-dom";
 
 const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
-  const [dashboardOpen, setDashboardOpen] = useState(true);
+  const [dashboardOpen, setDashboardOpen] = useState(false);
   const [masterOpen, setMasterOpen] = useState(true);
   const [customerOpen, setCustomerOpen] = useState(false);
   const location = useLocation();
@@ -44,10 +44,9 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
   const linkClass = ({ isActive }) =>
     `flex items-center gap-3 px-3 py-2 rounded-lg text-sm cursor-pointer transition-all duration-200
-    ${
-      isActive
-        ? "bg-blue-50 text-blue-600 font-semibold"
-        : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+    ${isActive
+      ? "bg-blue-50 text-blue-600 font-semibold"
+      : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
     }`;
 
   const menuItemClass = "flex items-center gap-3 px-3 py-2 rounded-lg text-sm cursor-pointer transition-all duration-200 text-gray-700 hover:bg-gray-100 hover:text-blue-600";
@@ -102,19 +101,18 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
               <span className="flex-1 text-left">Dashboard</span>
               <ChevronDown
                 size={14}
-                className={`transition-transform duration-200 ${
-                  dashboardOpen ? "rotate-180" : ""
-                }`}
+                className={`transition-transform duration-200 ${dashboardOpen ? "rotate-180" : ""
+                  }`}
               />
             </div>
 
             {dashboardOpen && (
               <div className="ml-10 mt-1 space-y-1">
-                <NavLink to="/admin" end className={linkClass}>
+                <NavLink to="/" end className={linkClass}>
                   <Home size={14} />
                   <span className="text-xs sm:text-sm">Dashboard </span>
                 </NavLink>
-                <NavLink to="/admin/overview" className={linkClass}>
+                <NavLink to="/overview" className={linkClass}>
                   <TrendingUp size={14} />
                   <span className="text-xs sm:text-sm">Analytics</span>
                 </NavLink>
@@ -134,23 +132,22 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
               <span className="flex-1 text-left">Master</span>
               <ChevronDown
                 size={14}
-                className={`transition-transform duration-200 ${
-                  masterOpen ? "rotate-180" : ""
-                }`}
+                className={`transition-transform duration-200 ${masterOpen ? "rotate-180" : ""
+                  }`}
               />
             </div>
 
             {masterOpen && (
               <div className="ml-10 mt-1 space-y-1">
-                <NavLink to="/admin/product" className={linkClass}>
+                <NavLink to="/product" className={linkClass}>
                   <ListOrdered size={14} />
                   <span className="text-xs sm:text-sm">Products</span>
                 </NavLink>
-                <NavLink to="/admin/brand" className={linkClass}>
+                <NavLink to="/brand" className={linkClass}>
                   <Tag size={14} />
                   <span className="text-xs sm:text-sm">Brands</span>
                 </NavLink>
-                <NavLink to="/admin/category" className={linkClass}>
+                <NavLink to="/category" className={linkClass}>
                   <FolderTree size={14} />
                   <span className="text-xs sm:text-sm">Categories</span>
                 </NavLink>
@@ -160,7 +157,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
           {/* Orders Section */}
           <div className="mb-2">
-            <NavLink to="/admin/orders" className={linkClass}>
+            <NavLink to="/orders" className={linkClass}>
               <ShoppingCart size={16} />
               <span className="text-xs sm:text-sm">Orders List</span>
             </NavLink>
@@ -178,15 +175,14 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
               <span className="flex-1 text-left">Customers</span>
               <ChevronDown
                 size={14}
-                className={`transition-transform duration-200 ${
-                  customerOpen ? "rotate-180" : ""
-                }`}
+                className={`transition-transform duration-200 ${customerOpen ? "rotate-180" : ""
+                  }`}
               />
             </div>
 
             {customerOpen && (
               <div className="ml-10 mt-1 space-y-1">
-                <NavLink to="/admin/customers" className={linkClass}>
+                <NavLink to="/customers" className={linkClass}>
                   <Users size={14} />
                   <span className="text-xs sm:text-sm">Customer List</span>
                 </NavLink>
@@ -195,7 +191,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
           </div>
         </nav>
 
-       
+
       </div>
     </>
   );

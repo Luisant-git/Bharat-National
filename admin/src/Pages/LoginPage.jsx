@@ -7,7 +7,6 @@ import { User, Lock, Eye, EyeOff } from "lucide-react";
 import { loginAdmin } from "../api/admin";
 import Input from "../components/Input";
 
-
 export default function LoginPage() {
   const navigate = useNavigate();
 
@@ -34,12 +33,17 @@ export default function LoginPage() {
 
       const data = await loginAdmin(email, password);
 
+      // Store token and admin data
+      if (data.access_token) {
+        localStorage.setItem("authToken", data.access_token);
+      }
       localStorage.setItem("admin", JSON.stringify(data.admin));
       localStorage.setItem("isAdminLoggedIn", "true");
 
       toast.success("Login successful!");
 
       setTimeout(() => navigate("/admin"), 500);
+      window.location.reload();
     } catch (err) {
       toast.error(err.message || "Login failed");
     } finally {

@@ -12,18 +12,34 @@ import OrderList from "./Pages/OrderedList";
 import BrandList from "./Pages/BrandList";
 
 export default function App() {
+  const isLoggedIn = localStorage.getItem("authToken");
+
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/admin">
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
+
       <Routes>
         {/* Public */}
-        <Route path="/" element={<Navigate to="/admin/login" />} />
-        <Route path="/admin/login" element={<LoginPage />} />
+        <Route
+          path="/login"
+          element={
+            isLoggedIn ? <Navigate to="/" /> : <LoginPage />
+          }
+        />
 
-        {/* Admin */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<AdminDashboard />} />
+        {/* Protected Admin Routes */}
+        <Route
+          path="/"
+          element={
+            isLoggedIn ? <AdminLayout /> : <Navigate to="/login" />
+          }
+        >
+          {/* ✅ INDEX ROUTE (IMPORTANT) */}
+          <Route index element={<AdminOverview />} />
+
+          {/* Other Pages */}
           <Route path="overview" element={<AdminOverview />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="category" element={<CategoryList />} />
           <Route path="addproduct" element={<ProductModal />} />
           <Route path="brand" element={<BrandList />} />
@@ -31,6 +47,9 @@ export default function App() {
           <Route path="customers" element={<CustomerList />} />
           <Route path="orders" element={<OrderList />} />
         </Route>
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
   );
