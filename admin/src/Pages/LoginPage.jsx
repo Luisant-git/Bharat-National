@@ -43,6 +43,7 @@ export default function LoginPage() {
       toast.success("Login successful!");
 
       setTimeout(() => navigate("/admin/"), 500);
+      window.location.reload();
       
     } catch (err) {
       toast.error(err.message || "Login failed");

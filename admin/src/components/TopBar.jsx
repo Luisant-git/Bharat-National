@@ -33,6 +33,7 @@ const AdminTopbar = ({ setSidebarOpen }) => {
     
     toast.success('Logged out successfully');
     navigate('login');
+    
  
   };
 
