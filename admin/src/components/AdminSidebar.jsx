@@ -108,7 +108,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
             {dashboardOpen && (
               <div className="ml-10 mt-1 space-y-1">
-                <NavLink to="/" end className={linkClass}>
+                <NavLink to="/dashboard" end className={linkClass}>
                   <Home size={14} />
                   <span className="text-xs sm:text-sm">Dashboard </span>
                 </NavLink>
