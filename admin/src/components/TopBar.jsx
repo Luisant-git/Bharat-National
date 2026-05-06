@@ -32,8 +32,8 @@ const AdminTopbar = ({ setSidebarOpen }) => {
     localStorage.removeItem('isAdminLoggedIn');
     
     toast.success('Logged out successfully');
-    navigate('/admin/login');
-    window.location.reload();
+    navigate('login');
+ 
   };
 
   // Click outside to close dropdown
