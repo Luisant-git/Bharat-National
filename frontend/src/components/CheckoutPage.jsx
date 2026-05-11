@@ -216,24 +216,24 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Header */}
       <div className="relative bg-white/80 backdrop-blur-xl border-b border-slate-200/60 top-0 z-30 shadow-[0_1px_20px_rgba(0,0,0,0.03)]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
-          <div className="flex items-center justify-between gap-3">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
-              <h1 className="text-2xl md:text-3xl font-semibold text-slate-900">Secure Checkout</h1>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-slate-900">Secure Checkout</h1>
             </div>
             <button
               type="button"
               onClick={() => navigate("/cart")}
-              className="group inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:border-slate-300 hover:shadow-md transition-all"
+              className="group inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-slate-700 hover:border-slate-300 hover:shadow-md transition-all"
             >
               <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
-              Back to Cart
+              <span className="hidden sm:inline">Back to Cart</span>
+              <span className="sm:hidden">Back</span>
             </button>
           </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="border-t border-slate-100/80 bg-gradient-to-b from-slate-50/30 to-transparent">
+          <div className="border-t border-slate-100/80 bg-gradient-to-b from-slate-50/30 to-transparent">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex justify-center">
             <nav aria-label="Checkout progress" className="w-full max-w-xl">
               <ol className="flex items-center justify-between relative">
@@ -284,71 +284,72 @@ export default function CheckoutPage() {
             </nav>
           </div>
         </div>
+      
       </div>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-10">
+      <main className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 lg:py-10">
         {isCartEmpty ? (
-          <div className="py-24 text-center">
-            <div className="mx-auto w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-              <ShoppingBag className="w-9 h-9 text-slate-400" />
+          <div className="py-16 sm:py-20 md:py-24 text-center">
+            <div className="mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-slate-100 flex items-center justify-center mb-3 sm:mb-4">
+              <ShoppingBag className="w-7 h-7 sm:w-9 sm:h-9 text-slate-400" />
             </div>
-            <p className="text-base text-slate-700 font-semibold">Your cart is empty</p>
+            <p className="text-sm sm:text-base text-slate-700 font-semibold">Your cart is empty</p>
             <button
               type="button"
               onClick={() => navigate("/products")}
-              className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold hover:underline"
+              className="mt-3 sm:mt-4 inline-flex items-center gap-1.5 text-sm font-bold hover:underline"
               style={{ color: "var(--primary, #00897B)" }}
             >
               Continue shopping
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
         ) : (
-          <form onSubmit={handlePlaceOrder} className="grid gap-6 md:grid-cols-[2fr_1.1fr]">
+          <form onSubmit={handlePlaceOrder} className="flex flex-col lg:grid lg:grid-cols-[2fr_1.1fr] gap-4 sm:gap-5 md:gap-6">
             {/* Left Column */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-5 md:space-y-6">
               {viewMode === "card" ? (
-                <section className="space-y-4">
+                <section className="space-y-3 sm:space-y-4">
                   <div>
-                    <h2 className="text-lg md:text-xl font-semibold text-slate-900 tracking-tight">Shipping Details</h2>
-                    <p className="mt-1 text-xs text-slate-500 max-w-xl">Review and manage your primary delivery information.</p>
+                    <h2 className="text-base sm:text-lg md:text-xl font-semibold text-slate-900 tracking-tight">Shipping Details</h2>
+                    <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-slate-500 max-w-xl">Review and manage your primary delivery information.</p>
                   </div>
 
-                  <div className="bg-white rounded-3xl border border-slate-200/70 shadow-[0_12px_40px_rgba(15,23,42,0.06)] overflow-hidden">
-                    <div className="px-6 py-5">
-                      <div className="flex items-center justify-between mb-5">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-2xl flex items-center justify-center" style={{ backgroundColor: "var(--primary-lighthead,#E0F2F1)" }}>
-                            <Truck className="w-4 h-4" style={{ color: "var(--primary,#00897B)" }} />
+                  <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-[0_12px_40px_rgba(15,23,42,0.06)] overflow-hidden">
+                    <div className="p-4 sm:p-5 md:px-6 md:py-5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-5 gap-2">
+                        <div className="flex items-center gap-2 sm:gap-2.5">
+                          <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-2xl flex items-center justify-center" style={{ backgroundColor: "var(--primary-lighthead,#E0F2F1)" }}>
+                            <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: "var(--primary,#00897B)" }} />
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-slate-900">Shipping Address</p>
-                            <p className="text-[10px] text-slate-400 uppercase tracking-[0.18em]">Default Address</p>
+                            <p className="text-xs sm:text-sm font-semibold text-slate-900">Shipping Address</p>
+                            <p className="text-[8px] sm:text-[10px] text-slate-400 uppercase tracking-[0.18em]">Default Address</p>
                           </div>
                         </div>
-                        <button onClick={() => setViewMode("form")} className="text-[11px] font-semibold text-[var(--primary,#00897B)] hover:underline">Edit Details</button>
+                        <button onClick={() => setViewMode("form")} className="text-[10px] sm:text-[11px] font-semibold text-[var(--primary,#00897B)] hover:underline">Edit Details</button>
                       </div>
 
-                      <div className="grid gap-10 md:grid-cols-[1.1fr_1.4fr] text-xs mb-6">
-                        <div className="space-y-4">
+                      <div className="flex flex-col sm:grid sm:grid-cols-[1.1fr_1.4fr] gap-6 sm:gap-8 md:gap-10 text-xs mb-4 sm:mb-6">
+                        <div className="space-y-3 sm:space-y-4">
                           <div>
-                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.18em] mb-1.5">Recipient</p>
-                            <p className="text-sm font-semibold text-slate-900">{fullName || "—"}</p>
+                            <p className="text-[9px] sm:text-[10px] font-semibold text-slate-400 uppercase tracking-[0.18em] mb-1 sm:mb-1.5">Recipient</p>
+                            <p className="text-xs sm:text-sm font-semibold text-slate-900 break-words">{fullName || "—"}</p>
                           </div>
                           <div>
-                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.18em] mb-1.5">Contact</p>
-                            <div className="space-y-1.5">
-                              <p className="flex items-center gap-2 text-slate-600"><Mail className="w-3.5 h-3.5 text-slate-400" />{email || "No email added"}</p>
-                              <p className="flex items-center gap-2 text-slate-600"><Phone className="w-3.5 h-3.5 text-slate-400" />{phone ? `+91 ${phone}` : "No phone added"}</p>
+                            <p className="text-[9px] sm:text-[10px] font-semibold text-slate-400 uppercase tracking-[0.18em] mb-1 sm:mb-1.5">Contact</p>
+                            <div className="space-y-1 sm:space-y-1.5">
+                              <p className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-slate-600 break-all"><Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400 flex-shrink-0" />{email || "No email added"}</p>
+                              <p className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-slate-600"><Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400 flex-shrink-0" />{phone ? `+91 ${phone}` : "No phone added"}</p>
                             </div>
                           </div>
                         </div>
                         <div>
-                          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.18em] mb-1.5">Delivery Address</p>
-                          <div className="flex gap-2.5">
-                            <MapPin className="w-4 h-4 text-slate-400" style={{ color: "var(--primary,#00897B)" }} />
-                            <p className="text-xs text-slate-700 leading-relaxed break-words">
+                          <p className="text-[9px] sm:text-[10px] font-semibold text-slate-400 uppercase tracking-[0.18em] mb-1 sm:mb-1.5">Delivery Address</p>
+                          <div className="flex gap-1.5 sm:gap-2.5">
+                            <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 flex-shrink-0" style={{ color: "var(--primary,#00897B)" }} />
+                            <p className="text-[11px] sm:text-xs text-slate-700 leading-relaxed break-words">
                               {address || "No address saved yet"}
                               {(place || state || pincode) && (
                                 <><br />{place}{place && (state || pincode) ? ", " : ""}{state}{state && pincode ? ", " : ""}{pincode}</>
@@ -358,39 +359,39 @@ export default function CheckoutPage() {
                         </div>
                       </div>
 
-                      <button onClick={() => setViewMode("form")} className="w-full mt-3 h-10 rounded-xl border border-dashed border-slate-200 bg-white text-[11px] font-semibold text-slate-500 hover:bg-slate-50 flex items-center justify-center gap-2">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400" /> ADD NEW ADDRESS
+                      <button onClick={() => setViewMode("form")} className="w-full mt-2 sm:mt-3 h-9 sm:h-10 rounded-xl border border-dashed border-slate-200 bg-white text-[10px] sm:text-[11px] font-semibold text-slate-500 hover:bg-slate-50 flex items-center justify-center gap-1.5 sm:gap-2">
+                        <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400" /> ADD NEW ADDRESS
                       </button>
                     </div>
                   </div>
                 </section>
               ) : (
-                <div className="bg-white rounded-3xl border border-slate-200/70 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_30px_-12px_rgba(0,0,0,0.08)] overflow-hidden">
-                  <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-gradient-to-br from-slate-50 to-white">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-md" style={{ background: "linear-gradient(135deg, var(--primary, #00897B), #00695C)" }}>
-                        {hasSavedAddress ? <Pencil className="w-4 h-4 text-white" /> : <Plus className="w-5 h-5 text-white" />}
+                <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_30px_-12px_rgba(0,0,0,0.08)] overflow-hidden">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-5 md:px-6 py-4 sm:py-5 border-b border-slate-100 bg-gradient-to-br from-slate-50 to-white">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center shadow-md flex-shrink-0" style={{ background: "linear-gradient(135deg, var(--primary, #00897B), #00695C)" }}>
+                        {hasSavedAddress ? <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" /> : <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-white" />}
                       </div>
                       <div>
-                        <h3 className="text-base font-bold text-slate-900 tracking-tight">{hasSavedAddress ? "Edit Delivery Address" : "Add Delivery Address"}</h3>
-                        <p className="text-xs text-slate-500 mt-0.5">{hasSavedAddress ? "Update your delivery information" : "Where should we send your order?"}</p>
+                        <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">{hasSavedAddress ? "Edit Delivery Address" : "Add Delivery Address"}</h3>
+                        <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5">{hasSavedAddress ? "Update your delivery information" : "Where should we send your order?"}</p>
                       </div>
                     </div>
                     {hasSavedAddress && (
-                      <button onClick={() => setViewMode("card")} className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
-                        <X className="w-3.5 h-3.5" /> Cancel
+                      <button onClick={() => setViewMode("card")} className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition self-start sm:self-auto">
+                        <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Cancel
                       </button>
                     )}
                   </div>
 
-                  <div className="p-6 space-y-5">
-                    <div className="grid md:grid-cols-2 gap-4">
+                  <div className="p-4 sm:p-5 md:p-6 space-y-4 sm:space-y-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <TextInput label="Full Name" placeholder="John Doe" icon={User} value={fullName} onChange={(e) => setFullName(e.target.value)} />
                       <TextInput label="Email" placeholder="johndoe@gmail.com" icon={Mail} value={email} onChange={(e) => setEmail(e.target.value)} />
                     </div>
                     <TextInput label="Phone Number" icon={Phone} type="tel" maxLength={14} placeholder="9876543210" value={phone} onChange={(e) => setPhone(e.target.value)} />
                     <TextInput label="Address" icon={MapPin} placeholder="House / Flat No, Street, Area" value={address} onChange={(e) => setAddress(e.target.value)} />
-                    <div className="grid md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                       <TextInput label="City" placeholder="Chennai" icon={MapPin} value={place} onChange={(e) => setPlace(e.target.value)} />
                       <TextInput label="State" placeholder="Tamil Nadu" icon={MapPin} value={state} onChange={(e) => setState(e.target.value)} />
                       <TextInput label="Pincode" placeholder="560001" icon={MapPin} type="tel" maxLength={6} value={pincode} onChange={(e) => setPincode(e.target.value)} />
@@ -399,11 +400,11 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       onClick={handleSaveAddress}
-                      className="group relative w-full flex items-center justify-center gap-2 text-white font-bold py-3.5 rounded-xl transition-all duration-300 overflow-hidden"
+                      className="group relative w-full flex items-center justify-center gap-2 text-white font-bold py-3 sm:py-3.5 rounded-xl transition-all duration-300 overflow-hidden text-sm sm:text-base"
                       style={{ background: "linear-gradient(135deg, var(--primary, #00897B), #00695C)", boxShadow: "0 10px 30px -10px rgba(0, 137, 123, 0.5)" }}
                     >
                       <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
-                      <span className="relative flex items-center gap-2"><CheckCircle2 className="w-4 h-4" />{hasSavedAddress ? "Update Address" : "Save Address"}</span>
+                      <span className="relative flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />{hasSavedAddress ? "Update Address" : "Save Address"}</span>
                     </button>
                   </div>
                 </div>
@@ -411,67 +412,71 @@ export default function CheckoutPage() {
             </div>
 
             {/* Right Column */}
-            <div className="space-y-5 h-fit md:sticky md:top-44">
+            <div className="space-y-4 sm:space-y-5 h-fit lg:sticky lg:top-20">
               {/* Order Summary */}
-              <div className="relative bg-white rounded-3xl border border-slate-200/70 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_30px_-12px_rgba(0,0,0,0.08)] overflow-hidden">
-                <div className="p-5 md:p-6">
-                  <h3 className="text-base font-bold text-slate-900 tracking-tight mb-3">Order Summary</h3>
+              <div className="relative bg-white rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_30px_-12px_rgba(0,0,0,0.08)] overflow-hidden">
+                <div className="p-4 sm:p-5 md:p-6">
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight mb-3">Order Summary</h3>
 
                   {cartItems.length > 0 && (
-                    <div className="mb-4 border border-slate-100 rounded-2xl bg-slate-50/50 max-h-40 overflow-y-auto custom-scrollbar">
+                    <div className="mb-4 border border-slate-100 rounded-xl sm:rounded-2xl bg-slate-50/50 max-h-40 overflow-y-auto custom-scrollbar">
                       {cartItems.map((item) => (
-                        <div key={item.id || item.productId} className="flex items-center gap-3 px-3 py-2.5 border-b last:border-b-0 border-slate-100">
-                          <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0">
+                        <div key={item.id || item.productId} className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 border-b last:border-b-0 border-slate-100">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0">
                             <img src={item.image || item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-medium text-slate-900 truncate">{item.name}</p>
-                            <p className="text-[11px] text-slate-500 mt-0.5">Qty: {item.quantity}</p>
+                            <p className="text-[11px] sm:text-[13px] font-medium text-slate-900 truncate">{item.name}</p>
+                            <p className="text-[9px] sm:text-[11px] text-slate-500 mt-0.5">Qty: {item.quantity}</p>
                           </div>
-                          <p className="text-[13px] font-semibold text-slate-900">₹{(item.price * item.quantity).toLocaleString()}</p>
+                          <p className="text-[11px] sm:text-[13px] font-semibold text-slate-900">₹{(item.price * item.quantity).toLocaleString()}</p>
                         </div>
                       ))}
                     </div>
                   )}
 
-                  <dl className="space-y-3 text-sm">
+                  <dl className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
                     <div className="flex justify-between items-center">
                       <dt className="text-slate-500">Subtotal ({totalItems} {totalItems !== 1 ? "items" : "item"})</dt>
                       <dd className="font-semibold text-slate-900">₹{subtotal.toLocaleString()}</dd>
                     </div>
                     <div className="flex justify-between items-center">
-                      <dt className="text-slate-500 flex items-center gap-1.5">Shipping<span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 uppercase">Free</span></dt>
+                      <dt className="text-slate-500 flex items-center gap-1 sm:gap-1.5">Shipping<span className="inline-flex items-center px-1 sm:px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-bold bg-emerald-50 text-emerald-700 uppercase">Free</span></dt>
                       <dd className="text-emerald-600 font-bold">{shippingLabel}</dd>
                     </div>
-                    <div className="border-t border-dashed border-slate-200 my-3"></div>
+                    <div className="border-t border-dashed border-slate-200 my-2 sm:my-3"></div>
                     <div className="flex justify-between items-center">
-                      <dt className="text-base font-bold text-slate-900">Total</dt>
-                      <dd className="text-xl font-bold" style={{ color: "var(--primary, #00897B)" }}>₹{total.toLocaleString()}</dd>
+                      <dt className="text-sm sm:text-base font-bold text-slate-900">Total</dt>
+                      <dd className="text-lg sm:text-xl font-bold" style={{ color: "var(--primary, #00897B)" }}>₹{total.toLocaleString()}</dd>
                     </div>
-                    <p className="text-[10px] text-slate-400 text-right">Inclusive of all taxes</p>
+                    <p className="text-[8px] sm:text-[10px] text-slate-400 text-right">Inclusive of all taxes</p>
                   </dl>
                 </div>
               </div>
 
-              {/* Payment Method */}
-              <div className="bg-white rounded-3xl border border-slate-200/70 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_30px_-12px_rgba(0,0,0,0.08)] overflow-hidden">
-                <div className="p-5 md:p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-base font-bold text-slate-900 tracking-tight">Payment Method</h3>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-600"><ShieldCheck className="w-3 h-3" />Secure</span>
+              {/* Payment Method - Fixed icon alignment */}
+              <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_30px_-12px_rgba(0,0,0,0.08)] overflow-hidden">
+                <div className="p-4 sm:p-5 md:p-6 space-y-3 sm:space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">Payment Method</h3>
+                    <span className="inline-flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-emerald-600"><ShieldCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3" />Secure</span>
                   </div>
 
-                  <label className={`group/pay block rounded-2xl border-2 p-4 cursor-pointer transition-all ${paymentMethod === "online" ? "border-[var(--primary,#00897B)] bg-gradient-to-br from-[var(--primary-lighthead,#E0F2F1)]/30 to-transparent shadow-md" : "border-slate-200 hover:border-slate-300 bg-white"}`}>
-                    <div className="flex items-start gap-3">
-                      <div className="relative pt-0.5">
+                  {/* Online Payment Option */}
+                  <label className={`group/pay block rounded-xl sm:rounded-2xl border-2 p-3 sm:p-4 cursor-pointer transition-all ${paymentMethod === "online" ? "border-[var(--primary,#00897B)] bg-gradient-to-br from-[var(--primary-lighthead,#E0F2F1)]/30 to-transparent shadow-md" : "border-slate-200 hover:border-slate-300 bg-white"}`}>
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
                         <input type="radio" name="paymentMethod" value="online" checked={paymentMethod === "online"} onChange={() => setPaymentMethod("online")} className="sr-only peer" />
                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${paymentMethod === "online" ? "border-[var(--primary,#00897B)]" : "border-slate-300"}`}>
                           {paymentMethod === "online" && <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "var(--primary, #00897B)" }}></div>}
                         </div>
                       </div>
                       <div className="flex-1">
-                        <div className="flex items-center justify-between gap-3">
-                          <div><p className="text-sm font-bold text-slate-900">Online Payment</p><p className="mt-0.5 text-xs text-slate-500">UPI, Cards, Net Banking</p></div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">Online Payment</p>
+                            <p className="text-xs text-slate-500">UPI, Cards, Net Banking</p>
+                          </div>
                           <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: paymentMethod === "online" ? "var(--primary-lighthead, #E0F2F1)" : "#F1F5F9" }}>
                             <CreditCard className="w-4 h-4" style={{ color: paymentMethod === "online" ? "var(--primary, #00897B)" : "#64748B" }} />
                           </div>
@@ -487,16 +492,20 @@ export default function CheckoutPage() {
                     </div>
                   </label>
 
-                  <label className={`group/pay block rounded-2xl border-2 p-4 cursor-pointer transition-all ${paymentMethod === "cod" ? "border-[var(--primary,#00897B)] bg-gradient-to-br from-[var(--primary-lighthead,#E0F2F1)]/30 to-transparent shadow-md" : "border-slate-200 hover:border-slate-300 bg-white"}`}>
-                    <div className="flex items-start gap-3">
-                      <div className="relative pt-0.5">
+                  {/* COD Payment Option */}
+                  <label className={`group/pay block rounded-xl sm:rounded-2xl border-2 p-3 sm:p-4 cursor-pointer transition-all ${paymentMethod === "cod" ? "border-[var(--primary,#00897B)] bg-gradient-to-br from-[var(--primary-lighthead,#E0F2F1)]/30 to-transparent shadow-md" : "border-slate-200 hover:border-slate-300 bg-white"}`}>
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
                         <input type="radio" name="paymentMethod" value="cod" checked={paymentMethod === "cod"} onChange={() => setPaymentMethod("cod")} className="sr-only peer" />
                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${paymentMethod === "cod" ? "border-[var(--primary,#00897B)]" : "border-slate-300"}`}>
                           {paymentMethod === "cod" && <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "var(--primary, #00897B)" }}></div>}
                         </div>
                       </div>
-                      <div className="flex-1 flex items-center justify-between gap-3">
-                        <div><p className="text-sm font-bold text-slate-900">Cash on Delivery</p><p className="mt-0.5 text-xs text-slate-500">Pay when you receive</p></div>
+                      <div className="flex-1 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">Cash on Delivery</p>
+                          <p className="text-xs text-slate-500">Pay when you receive</p>
+                        </div>
                         <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: paymentMethod === "cod" ? "var(--primary-lighthead, #E0F2F1)" : "#F1F5F9" }}>
                           <Wallet className="w-4 h-4" style={{ color: paymentMethod === "cod" ? "var(--primary, #00897B)" : "#64748B" }} />
                         </div>
@@ -517,19 +526,19 @@ export default function CheckoutPage() {
               <button
                 type="submit"
                 disabled={submitting || viewMode === "form"}
-                className="group relative w-full flex items-center justify-center gap-2 text-white font-bold py-4 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+                className="group relative w-full flex items-center justify-center gap-2 text-white font-bold py-3 sm:py-4 rounded-xl sm:rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden text-sm sm:text-base"
                 style={{ background: "linear-gradient(135deg, var(--primary, #00897B), #00695C)", boxShadow: "0 12px 30px -10px rgba(0, 137, 123, 0.6)" }}
               >
                 <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
-                <span className="relative flex items-center gap-2 text-base">
+                <span className="relative flex items-center gap-2">
                   {submitting ? (
-                    <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>Processing...</>
+                    <><div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>Processing...</>
                   ) : viewMode === "form" ? (
                     "Save address to continue"
                   ) : paymentMethod === "online" ? (
-                    <><LockKeyhole className="w-4 h-4" /> Pay ₹{total.toLocaleString()} Now</>
+                    <><LockKeyhole className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Pay ₹{total.toLocaleString()} Now</>
                   ) : (
-                    <><Wallet className="w-4 h-4" /> Place Order (COD)</>
+                    <><Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Place Order (COD)</>
                   )}
                 </span>
               </button>
@@ -540,33 +549,32 @@ export default function CheckoutPage() {
 
       {/* Success Modal */}
       {showSuccess && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
-          <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, var(--primary, #00897B) 2px, transparent 2px), radial-gradient(circle at 80% 70%, #10B981 2px, transparent 2px)", backgroundSize: "40px 40px" }}></div>
-            <button onClick={() => { setShowSuccess(false); navigate("/products"); }} className="absolute right-4 top-4 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/80 backdrop-blur hover:bg-slate-100 text-slate-500 hover:text-slate-900 hover:rotate-90 transition-all">
-              <X className="w-4 h-4" />
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md p-3 sm:p-4 animate-in fade-in duration-300">
+          <div className="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-[90%] sm:max-w-md w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300">
+            <button onClick={() => { setShowSuccess(false); navigate("/products"); }} className="absolute right-2 sm:right-4 top-2 sm:top-4 z-10 w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-white/80 backdrop-blur hover:bg-slate-100 text-slate-500 hover:text-slate-900 hover:rotate-90 transition-all">
+              <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
-            <div className="relative px-8 py-10 text-center">
-              <div className="relative mx-auto mb-6 w-20 h-20">
+            <div className="relative px-4 sm:px-6 md:px-8 py-6 sm:py-8 md:py-10 text-center">
+              <div className="relative mx-auto mb-4 sm:mb-6 w-16 h-16 sm:w-20 sm:h-20">
                 <div className="absolute inset-0 rounded-full bg-emerald-200 animate-ping opacity-20"></div>
-                <div className="absolute inset-2 rounded-full bg-emerald-100 animate-pulse"></div>
-                <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-xl">
-                  <CheckCircle2 className="w-10 h-10 text-white" strokeWidth={2.5} />
+                <div className="absolute inset-1 sm:inset-2 rounded-full bg-emerald-100 animate-pulse"></div>
+                <div className="relative flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-xl">
+                  <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10 text-white" strokeWidth={2.5} />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{paymentMethod === "online" ? "Payment Successful!" : "Order Placed!"}</h2>
-              <p className="mt-3 text-sm text-slate-600 leading-relaxed max-w-xs mx-auto">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">{paymentMethod === "online" ? "Payment Successful!" : "Order Placed!"}</h2>
+              <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-slate-600 leading-relaxed max-w-xs mx-auto">
                 {paymentMethod === "online" ? "Your payment is complete and your order is confirmed." : "Your order has been placed successfully. Please pay in cash upon delivery."}
               </p>
-              <div className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-slate-100">
-                <Package className="w-3.5 h-3.5 text-slate-400" />
-                <span className="text-xs font-semibold text-slate-700">{totalItems} {totalItems === 1 ? "item" : "items"} • ₹{total.toLocaleString()}</span>
+              <div className="mt-4 sm:mt-5 inline-flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-slate-50 border border-slate-100">
+                <Package className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400" />
+                <span className="text-[10px] sm:text-xs font-semibold text-slate-700">{totalItems} {totalItems === 1 ? "item" : "items"} • ₹{total.toLocaleString()}</span>
               </div>
-              <div className="mt-7 space-y-3">
-                <button onClick={() => navigate("/products")} className="group relative w-full flex items-center justify-center gap-2 text-white font-bold py-3.5 rounded-2xl transition-all duration-300 overflow-hidden" style={{ background: "linear-gradient(135deg, var(--primary, #00897B), #00695C)", boxShadow: "0 10px 30px -10px rgba(0, 137, 123, 0.5)" }}>
-                  <span className="relative flex items-center gap-2">Continue Shopping <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></span>
+              <div className="mt-5 sm:mt-7 space-y-2 sm:space-y-3">
+                <button onClick={() => navigate("/products")} className="group relative w-full flex items-center justify-center gap-2 text-white font-bold py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl transition-all duration-300 overflow-hidden text-sm sm:text-base" style={{ background: "linear-gradient(135deg, var(--primary, #00897B), #00695C)", boxShadow: "0 10px 30px -10px rgba(0, 137, 123, 0.5)" }}>
+                  <span className="relative flex items-center gap-2">Continue Shopping <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" /></span>
                 </button>
-                <button onClick={() => navigate("/orders")} className="w-full text-sm font-bold hover:underline transition-colors" style={{ color: "var(--primary, #00897B)" }}>View My Orders →</button>
+                <button onClick={() => navigate("/orders")} className="w-full text-xs sm:text-sm font-bold hover:underline transition-colors" style={{ color: "var(--primary, #00897B)" }}>View My Orders →</button>
               </div>
             </div>
           </div>
@@ -574,10 +582,14 @@ export default function CheckoutPage() {
       )}
 
       <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+        
+        @media (min-width: 640px) {
+          .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        }
       `}</style>
     </div>
   );
